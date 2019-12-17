@@ -746,6 +746,7 @@ class AnalysesView(BikaListingView):
             # Set the results field editable
             if self.is_result_edition_allowed(analysis_brain):
                 item["allow_edit"].append("Result")
+		item["allow_edit"].append("Analyst")
 
             # Prepare result options
             choices = analysis_brain.getResultOptions
