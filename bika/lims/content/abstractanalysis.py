@@ -990,6 +990,20 @@ class AbstractAnalysis(AbstractBaseAnalysis):
         return analyst or ""
 
     @security.public
+    def getAnalystInitials(self):
+        """"Returns the Analyst's initials from the 'FaxPhone' field
+        """
+
+        analyst = self.getAnalyst()
+        if not analyst:
+            return ""
+        user = api.get_user(analyst.strip())
+        contact = api.get_user_contact(user, ['LabContact'])
+        if not contact:
+            return ""
+        return contact.getBusinessFax() or ""
+
+    @security.public
     def getAssignedAnalyst(self):
         """Returns the Analyst assigned to the worksheet this
         analysis is assigned to
