@@ -23,7 +23,6 @@ class window.RemarksWidgetView
     console.debug "RemarksWidgetView::bind_eventhandler"
 
     $("body").on "click", "input.saveRemarks", @on_remarks_submit
-    $("body").on "keyup", "textarea[name='Remarks']", @on_remarks_change
 
     # dev only
     window.rem = @
@@ -63,21 +62,10 @@ class window.RemarksWidgetView
     ###
      * Clear and update the widget's History with the provided value.
     ###
-    return if value.length < 1
     widget = @get_remarks_widget(uid)
     return if widget is null
     el = widget.find('.remarks_history')
-    val = value[0]
-    record_header = $("<div class='record-header'/>")
-    record_header.append $("<span class='record-user'>"+val["user_id"]+"</span>")
-    record_header.append $("<span class='record-username'>"+val["user_name"]+"</span>")
-    record_header.append $("<span class='record-date'>"+val["created"]+"</span>")
-    record_content = $("<div class='record-content'/>")
-    record_content.html(@format(val["content"]))
-    record = $("<div class='record' id='"+val['id']+"'/>")
-    record.append record_header
-    record.append record_content
-    el.prepend record
+    el.html(@format value)
 
   clear_remarks_textarea: (uid) =>
     ###
@@ -166,22 +154,9 @@ class window.RemarksWidgetView
 
   ### EVENT HANDLERS ###
 
-  on_remarks_change: (event) =>
-    ###
-     * Eventhandler for RemarksWidget's textarea changes
-     *
-    ###
-    console.debug "°°° RemarksWidgetView::on_remarks_change °°°"
-    el = event.target
-    return unless el.value
-    btn = el.parentElement.querySelector("input.saveRemarks")
-    # Enable the button
-    btn.disabled = false
-
-
   on_remarks_submit: (event) =>
     ###
-     * Eventhandler for RemarksWidget's "Save Remarks" button
+     * Eventhandler for RemarksWidget"s "Save Remarks" button
      *
     ###
     console.debug "°°° RemarksWidgetView::on_remarks_submit °°°"
@@ -208,18 +183,13 @@ class window.RemarksWidgetView
     options.context ?= this
     options.dataType ?= "json"
     options.data ?= {}
-    options.timeout ?= 600000  # 10 minutes timeout
 
     console.debug ">>> ajax_submit::options=", options
 
     $(this).trigger "ajax:submit:start"
     done = ->
       $(this).trigger "ajax:submit:end"
-    fail = (request, status, error) ->
-      msg = _("Sorry, an error occured: #{status}")
-      window.bika.lims.portalMessage msg
-      window.scroll 0, 0
-    return $.ajax(options).done(done).fail(fail)
+    return $.ajax(options).done done
 
   get_portal_url: =>
     ###

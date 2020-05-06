@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import base64
@@ -25,44 +25,14 @@ from decimal import Decimal
 from urlparse import urljoin
 
 from AccessControl import ClassSecurityInfo
-from DateTime import DateTime
-from Products.ATExtensions.field import RecordsField
-from Products.Archetypes.Widget import RichWidget
-from Products.Archetypes.atapi import BaseFolder
-from Products.Archetypes.atapi import BooleanField
-from Products.Archetypes.atapi import BooleanWidget
-from Products.Archetypes.atapi import ComputedField
-from Products.Archetypes.atapi import ComputedWidget
-from Products.Archetypes.atapi import FileField
-from Products.Archetypes.atapi import FileWidget
-from Products.Archetypes.atapi import FixedPointField
-from Products.Archetypes.atapi import ReferenceField
-from Products.Archetypes.atapi import StringField
-from Products.Archetypes.atapi import StringWidget
-from Products.Archetypes.atapi import TextField
-from Products.Archetypes.atapi import registerType
-from Products.Archetypes.public import Schema
-from Products.Archetypes.references import HoldingReference
-from Products.CMFCore.permissions import ModifyPortalContent
-from Products.CMFCore.permissions import View
-from Products.CMFCore.utils import getToolByName
-from Products.CMFPlone.utils import _createObjectByType
-from Products.CMFPlone.utils import safe_unicode
-from zope.interface import alsoProvides
-from zope.interface import implements
-from zope.interface import noLongerProvides
-
 from bika.lims import api
 from bika.lims import bikaMessageFactory as _
 from bika.lims import deprecated
 from bika.lims import logger
-from bika.lims.api.security import check_permission
 from bika.lims.browser.fields import ARAnalysesField
 from bika.lims.browser.fields import DateTimeField
 from bika.lims.browser.fields import DurationField
-from bika.lims.browser.fields import ResultsRangesField
 from bika.lims.browser.fields import UIDReferenceField
-from bika.lims.browser.fields import EmailsField
 from bika.lims.browser.fields.remarksfield import RemarksField
 from bika.lims.browser.widgets import DateTimeWidget
 from bika.lims.browser.widgets import DecimalWidget
@@ -74,18 +44,13 @@ from bika.lims.browser.widgets import SelectionWidget as BikaSelectionWidget
 from bika.lims.browser.widgets.durationwidget import DurationWidget
 from bika.lims.catalog import CATALOG_ANALYSIS_LISTING
 from bika.lims.catalog import CATALOG_ANALYSIS_REQUEST_LISTING
-from bika.lims.catalog import CATALOG_WORKSHEET_LISTING
-from bika.lims.catalog.bika_catalog import BIKA_CATALOG
 from bika.lims.config import PRIORITIES
 from bika.lims.config import PROJECTNAME
+from bika.lims.content.analysisspec import ResultsRangeDict
 from bika.lims.content.bikaschema import BikaSchema
-from bika.lims.content.clientawaremixin import ClientAwareMixin
 from bika.lims.interfaces import IAnalysisRequest
 from bika.lims.interfaces import IAnalysisRequestPartition
-from bika.lims.interfaces import IAnalysisRequestWithPartitions
-from bika.lims.interfaces import IBatch
 from bika.lims.interfaces import ICancellable
-from bika.lims.interfaces import IClient
 from bika.lims.interfaces import ISubmitted
 from bika.lims.permissions import FieldEditBatch
 from bika.lims.permissions import FieldEditClient
@@ -112,10 +77,11 @@ from bika.lims.permissions import FieldEditRemarks
 from bika.lims.permissions import FieldEditResultsInterpretation
 from bika.lims.permissions import FieldEditSampleCondition
 from bika.lims.permissions import FieldEditSamplePoint
-from bika.lims.permissions import FieldEditSampleType
 from bika.lims.permissions import FieldEditSampler
+from bika.lims.permissions import FieldEditSampleType
 from bika.lims.permissions import FieldEditSamplingDate
 from bika.lims.permissions import FieldEditSamplingDeviation
+from bika.lims.permissions import FieldEditSamplingRound
 from bika.lims.permissions import FieldEditScheduledSampler
 from bika.lims.permissions import FieldEditSpecification
 from bika.lims.permissions import FieldEditStorageLocation
@@ -127,10 +93,35 @@ from bika.lims.utils import user_email
 from bika.lims.utils import user_fullname
 from bika.lims.workflow import getTransitionDate
 from bika.lims.workflow import getTransitionUsers
+from DateTime import DateTime
+from Products.Archetypes.atapi import BaseFolder
+from Products.Archetypes.atapi import BooleanField
+from Products.Archetypes.atapi import BooleanWidget
+from Products.Archetypes.atapi import ComputedField
+from Products.Archetypes.atapi import ComputedWidget
+from Products.Archetypes.atapi import FileField
+from Products.Archetypes.atapi import FileWidget
+from Products.Archetypes.atapi import FixedPointField
+from Products.Archetypes.atapi import ReferenceField
+from Products.Archetypes.atapi import StringField
+from Products.Archetypes.atapi import StringWidget
+from Products.Archetypes.atapi import TextField
+from Products.Archetypes.atapi import registerType
+from Products.Archetypes.public import Schema
+from Products.Archetypes.references import HoldingReference
+from Products.Archetypes.Widget import RichWidget
+from Products.ATExtensions.field import RecordsField
+from Products.CMFCore.permissions import ModifyPortalContent
+from Products.CMFCore.permissions import View
+from Products.CMFCore.utils import getToolByName
+from Products.CMFPlone.utils import _createObjectByType
+from Products.CMFPlone.utils import safe_unicode
+from zope.interface import alsoProvides
+from zope.interface import implements
+from zope.interface import noLongerProvides
 
 IMG_SRC_RX = re.compile(r'<img.*?src="(.*?)"')
 IMG_DATA_SRC_RX = re.compile(r'<img.*?src="(data:image/.*?;base64,)(.*?)"')
-FINAL_STATES = ["published", "retracted", "rejected", "cancelled"]
 
 
 # SCHEMA DEFINITION
@@ -209,11 +200,13 @@ schema = BikaSchema.copy() + Schema((
         ),
     ),
 
-    EmailsField(
+    StringField(
         'CCEmails',
         mode="rw",
         read_permission=View,
         write_permission=FieldEditContact,
+        acquire=True,
+        acquire_fieldname="CCEmails",
         widget=StringWidget(
             label=_("CC Emails"),
             description=_("Additional email addresses to be notified"),
@@ -249,6 +242,13 @@ schema = BikaSchema.copy() + Schema((
                         "sort_on": "sortable_title",
                         "sort_order": "ascending"},
             showOn=True,
+            add_button={
+                    'visible': True,
+                    'url': 'clients/createObject?type_name=Client',
+                    'return_fields': ['Title'],
+                    'js_controllers': ['#client-base-edit'],
+                    'overlay_handler': 'ClientOverlayHandler',
+                }
         ),
     ),
 
@@ -310,8 +310,7 @@ schema = BikaSchema.copy() + Schema((
             visible={
                 'add': 'edit',
             },
-            catalog_name=BIKA_CATALOG,
-            search_fields=('listing_searchable_text',),
+            catalog_name="bika_catalog",
             base_query={"is_active": True,
                         "sort_limit": 50,
                         "sort_on": "sortable_title",
@@ -319,15 +318,35 @@ schema = BikaSchema.copy() + Schema((
             colModel=[
                 {'columnName': 'getId', 'width': '20',
                  'label': _('Batch ID'), 'align': 'left'},
-                {'columnName': 'Title', 'width': '20',
-                 'label': _('Title'), 'align': 'left'},
                 {'columnName': 'getClientBatchID', 'width': '20',
                  'label': _('CBID'), 'align': 'left'},
                 {'columnName': 'getClientTitle', 'width': '30',
                  'label': _('Client'), 'align': 'left'},
             ],
+            minLength=3,
             force_all = False,
             ui_item="getId",
+            showOn=True,
+        ),
+    ),
+
+    ReferenceField(
+        'SamplingRound',
+        allowed_types=('SamplingRound',),
+        relationship='AnalysisRequestSamplingRound',
+        mode="rw",
+        read_permission=View,
+        write_permission=FieldEditSamplingRound,
+        widget=ReferenceWidget(
+            label=_("Sampling Round"),
+            description=_("The assigned sampling round of this request"),
+            size=20,
+            render_own_label=True,
+            visible={
+                'add': 'invisible',
+            },
+            catalog_name='portal_catalog',
+            base_query={},
             showOn=True,
         ),
     ),
@@ -645,7 +664,6 @@ schema = BikaSchema.copy() + Schema((
     ReferenceField(
         'Specification',
         required=0,
-        primary_bound=True,  # field changes propagate to partitions
         allowed_types='AnalysisSpec',
         relationship='AnalysisRequestAnalysisSpec',
         mode="rw",
@@ -663,13 +681,12 @@ schema = BikaSchema.copy() + Schema((
             base_query={"is_active": True,
                         "sort_on": "sortable_title",
                         "sort_order": "ascending"},
-            search_fields=('listing_searchable_text',),
             colModel=[
                 {'columnName': 'contextual_title',
                  'width': '30',
                  'label': _('Title'),
                  'align': 'left'},
-                {'columnName': 'getSampleTypeTitle',
+                {'columnName': 'SampleTypeTitle',
                  'width': '70',
                  'label': _('SampleType'),
                  'align': 'left'},
@@ -681,16 +698,13 @@ schema = BikaSchema.copy() + Schema((
         ),
     ),
 
-    # Field to keep the result ranges from the specification initially set
-    # through "Specifications" field. This guarantees that the result ranges
-    # set by default to this Sample won't change even if the Specifications
-    # object referenced gets modified thereafter.
-    # This field does not consider result ranges manually set to analyses.
-    # Therefore, is also used to "detect" changes between the result ranges
-    # specifically set to analyses and the results ranges set to the sample
-    ResultsRangesField(
-        "ResultsRange",
-        write_permission=FieldEditSpecification,
+    # see setResultsRange below.
+    RecordsField(
+        'ResultsRange',
+        required=0,
+        type='resultsrange',
+        subfields=('keyword', 'min', 'max', 'warn_min', 'warn_max', 'hidemin',
+                   'hidemax', 'rangecomment', 'min_operator', 'max_operator'),
         widget=ComputedWidget(visible=False),
     ),
 
@@ -1051,6 +1065,7 @@ schema = BikaSchema.copy() + Schema((
 
     RemarksField(
         'Remarks',
+        searchable=True,
         read_permission=View,
         write_permission=FieldEditRemarks,
         widget=RemarksWidget(
@@ -1077,6 +1092,14 @@ schema = BikaSchema.copy() + Schema((
             visible={
                 'add': 'invisible',
             },
+        ),
+    ),
+    # TODO-catalog: move all these computed fields to methods
+    ComputedField(
+        'ClientUID',
+        expression='here.aq_parent.UID()',
+        widget=ComputedWidget(
+            visible=False,
         ),
     ),
 
@@ -1140,6 +1163,12 @@ schema = BikaSchema.copy() + Schema((
         widget=ComputedWidget(visible=False),
     ),
     ComputedField(
+        'SamplingRoundUID',
+        expression="here.getSamplingRound().UID() " \
+                   "if here.getSamplingRound() else ''",
+        widget=ComputedWidget(visible=False),
+    ),
+    ComputedField(
         'SamplerFullName',
         expression="here._getSamplerFullName()",
         widget=ComputedWidget(visible=False),
@@ -1158,6 +1187,27 @@ schema = BikaSchema.copy() + Schema((
         'BatchURL',
         expression="here.getBatch().absolute_url_path() " \
                    "if here.getBatch() else ''",
+        widget=ComputedWidget(visible=False),
+    ),
+    ComputedField(
+        'ClientUID',
+        expression="here.getClient().UID() if here.getClient() else ''",
+        widget=ComputedWidget(visible=False),
+    ),
+    ComputedField(
+        'ClientID',
+        expression="here.getClient().getClientID() if here.getClient() else ''",
+        widget=ComputedWidget(visible=False),
+    ),
+    ComputedField(
+        'ClientTitle',
+        expression="here.getClient().Title() if here.getClient() else ''",
+        widget=ComputedWidget(visible=False),
+    ),
+    ComputedField(
+        'ClientURL',
+        expression="here.getClient().absolute_url_path() " \
+                   "if here.getClient() else ''",
         widget=ComputedWidget(visible=False),
     ),
     ComputedField(
@@ -1366,7 +1416,7 @@ schema.moveField('ResultsInterpretationDepts', pos='bottom')
 schema.moveField("PrimaryAnalysisRequest", before="Client")
 
 
-class AnalysisRequest(BaseFolder, ClientAwareMixin):
+class AnalysisRequest(BaseFolder):
     implements(IAnalysisRequest, ICancellable)
     security = ClassSecurityInfo()
     displayContentsTab = False
@@ -1404,74 +1454,15 @@ class AnalysisRequest(BaseFolder, ClientAwareMixin):
         descr = " ".join((self.getId(), self.aq_parent.Title()))
         return safe_unicode(descr).encode('utf-8')
 
-    def setSpecification(self, value):
-        """Sets the Specifications and ResultRange values
-        """
-        current_spec = self.getRawSpecification()
-        if value and current_spec == api.get_uid(value):
-            # Specification has not changed, preserve the current value to
-            # prevent result ranges (both from Sample and from analyses) from
-            # being overriden
-            return
-
-        self.getField("Specification").set(self, value)
-
-        # Set the value for field ResultsRange, cause Specification is only
-        # used as a template: all the results range logic relies on
-        # ResultsRange field, so changes in setup's Specification object won't
-        # have effect to already created samples
-        spec = self.getSpecification()
-        if spec:
-            # Update only results ranges if specs is not None, so results
-            # ranges manually set previously (e.g. via ManageAnalyses view) are
-            # preserved unless a new Specification overrides them
-            self.setResultsRange(spec.getResultsRange(), recursive=False)
-
-        # Cascade the changes to partitions, but only to those that are in a
-        # status in which the specification can be updated. This prevents the
-        # re-assignment of Specifications to already verified or published
-        # samples
-        permission = self.getField("Specification").write_permission
-        for descendant in self.getDescendants():
-            if check_permission(permission, descendant):
-                descendant.setSpecification(spec)
-
-    def setResultsRange(self, value, recursive=True):
-        """Sets the results range for this Sample and analyses it contains.
-        If recursive is True, then applies the results ranges to descendants
-        (partitions) as well as their analyses too
-        """
-        # Set Results Range to the Sample
-        field = self.getField("ResultsRange")
-        field.set(self, value)
-
-        # Set Results Range to analyses
-        for analysis in self.objectValues("Analysis"):
-            if not ISubmitted.providedBy(analysis):
-                service_uid = analysis.getRawAnalysisService()
-                result_range = field.get(self, search_by=service_uid)
-                analysis.setResultsRange(result_range)
-                analysis.reindexObject()
-
-        if recursive:
-            # Cascade the changes to partitions
-            permission = self.getField("Specification").write_permission
-            for descendant in self.getDescendants():
-                if check_permission(permission, descendant):
-                    descendant.setResultsRange(value)
-
     def getClient(self):
-        """Returns the client this object is bound to. We override getClient
-        from ClientAwareMixin because the "Client" schema field is only used to
-        allow the user to set the client while creating the Sample through
-        Sample Add form, but cannot be changed afterwards. The Sample is
-        created directly inside the selected client folder on submit
-        """
-        if IClient.providedBy(self.aq_parent):
+        if self.aq_parent.portal_type == 'Client':
             return self.aq_parent
-        if IBatch.providedBy(self.aq_parent):
+        if self.aq_parent.portal_type == 'Batch':
             return self.aq_parent.getClient()
-        return None
+        return ''
+
+    def getClientPath(self):
+        return "/".join(self.aq_parent.getPhysicalPath())
 
     def getProfilesTitle(self):
         return [profile.Title() for profile in self.getProfiles()]
@@ -1520,6 +1511,7 @@ class AnalysisRequest(BaseFolder, ClientAwareMixin):
         original_value = self.Schema().getField('Batch').get(self)
         if original_value != value:
             self.Schema().getField('Batch').set(self, value)
+            self._reindexAnalyses(['getBatchUID'], False)
 
     def getDefaultMemberDiscount(self):
         """Compute default member discount if it applies
@@ -1834,56 +1826,75 @@ class AnalysisRequest(BaseFolder, ClientAwareMixin):
         # noinspection PyCallingNonCallable
         return DateTime()
 
-    def getWorksheets(self, full_objects=False):
-        """Returns the worksheets that contains analyses from this Sample
+    def getQCAnalyses(self, qctype=None, review_state=None):
+        """return the QC analyses performed in the worksheet in which, at
+        least, one sample of this AR is present.
+
+        Depending on qctype value, returns the analyses of:
+
+            - 'b': all Blank Reference Samples used in related worksheet/s
+            - 'c': all Control Reference Samples used in related worksheet/s
+            - 'd': duplicates only for samples contained in this AR
+
+        If qctype==None, returns all type of qc analyses mentioned above
         """
-        # Get the Analyses UIDs of this Sample
-        analyses_uids = map(api.get_uid, self.getAnalyses())
-        if not analyses_uids:
-            return []
+        qcanalyses = []
+        suids = []
+        ans = self.getAnalyses()
+        wf = getToolByName(self, 'portal_workflow')
+        for an in ans:
+            an = an.getObject()
+            if an.getServiceUID() not in suids:
+                suids.append(an.getServiceUID())
 
-        # Get the worksheets that contain any of these analyses
-        query = dict(getAnalysesUIDs=analyses_uids)
-        worksheets = api.search(query, CATALOG_WORKSHEET_LISTING)
-        if full_objects:
-            worksheets = map(api.get_object, worksheets)
-        return worksheets
+        def valid_dup(wan):
+            if wan.portal_type == 'ReferenceAnalysis':
+                return False
+            an_state = wf.getInfoFor(wan, 'review_state')
+            return \
+                wan.portal_type == 'DuplicateAnalysis' \
+                and wan.getRequestID() == self.id \
+                and (review_state is None or an_state in review_state)
 
-    def getQCAnalyses(self, review_state=None):
-        """Returns the Quality Control analyses assigned to worksheets that
-        contains analyses from this Sample
-        """
-        # Get the worksheet uids
-        worksheet_uids = map(api.get_uid, self.getWorksheets())
-        if not worksheet_uids:
-            return []
+        def valid_ref(wan):
+            if wan.portal_type != 'ReferenceAnalysis':
+                return False
+            an_state = wf.getInfoFor(wan, 'review_state')
+            an_reftype = wan.getReferenceType()
+            return wan.getServiceUID() in suids \
+                and wan not in qcanalyses \
+                and (qctype is None or an_reftype == qctype) \
+                and (review_state is None or an_state in review_state)
 
-        # Get reference qc analyses from these worksheets
-        query = dict(portal_type="ReferenceAnalysis",
-                     getWorksheetUID=worksheet_uids)
-        qc_analyses = api.search(query, CATALOG_ANALYSIS_LISTING)
+        for an in ans:
+            an = an.getObject()
+            ws = an.getWorksheet()
+            if not ws:
+                continue
+            was = ws.getAnalyses()
+            for wa in was:
+                if valid_dup(wa):
+                    qcanalyses.append(wa)
+                elif valid_ref(wa):
+                    qcanalyses.append(wa)
 
-        # Extend with duplicate qc analyses from these worksheets and Sample
-        query = dict(portal_type="DuplicateAnalysis",
-                     getWorksheetUID=worksheet_uids,
-                     getAncestorsUIDs=[api.get_uid(self)])
-        qc_analyses += api.search(query, CATALOG_ANALYSIS_LISTING)
-
-        # Bail out analyses with a different review_state
-        if review_state:
-            qc_analyses = filter(
-                lambda an: api.get_review_status(an) in review_state,
-                qc_analyses
-            )
-
-        # Return the objects
-        return map(api.get_object, qc_analyses)
+        return qcanalyses
 
     def isInvalid(self):
         """return if the Analysis Request has been invalidated
         """
         workflow = getToolByName(self, 'portal_workflow')
         return workflow.getInfoFor(self, 'review_state') == 'invalid'
+
+    def getSamplingRoundUID(self):
+        """Obtains the sampling round UID
+        :returns: UID
+        """
+        sr = self.getSamplingRound()
+        if sr:
+            return sr.UID()
+        else:
+            return ''
 
     def getStorageLocationTitle(self):
         """ A method for AR listing catalog metadata
@@ -1893,6 +1904,45 @@ class AnalysisRequest(BaseFolder, ClientAwareMixin):
         if sl:
             return sl.Title()
         return ''
+
+    @security.public
+    def getResultsRange(self):
+        """Returns the valid result ranges for the analyses this Analysis
+        Request contains.
+
+        By default uses the result ranges defined in the Analysis Specification
+        set in "Specification" field if any. Values manually set through
+        `ResultsRange` field for any given analysis keyword have priority over
+        the result ranges defined in "Specification" field.
+
+        :return: A list of dictionaries, where each dictionary defines the
+            result range to use for any analysis contained in this Analysis
+            Request for the keyword specified. Each dictionary has, at least,
+                the following keys: "keyword", "min", "max"
+        :rtype: dict
+        """
+        specs_range = []
+        specification = self.getSpecification()
+        if specification:
+            specs_range = specification.getResultsRange()
+            specs_range = specs_range and specs_range or []
+
+        # Override with AR's custom ranges
+        ar_range = self.Schema().getField("ResultsRange").get(self)
+        if not ar_range:
+            return specs_range
+
+        # Remove those analysis ranges that neither min nor max are floatable
+        an_specs = [an for an in ar_range if
+                    api.is_floatable(an.get('min', None)) or
+                    api.is_floatable(an.get('max', None))]
+        # Want to know which are the analyses that needs to be overriden
+        keywords = map(lambda item: item.get('keyword'), an_specs)
+        # Get rid of those analyses to be overriden
+        out_specs = [sp for sp in specs_range if sp['keyword'] not in keywords]
+        # Add manually set ranges
+        out_specs.extend(an_specs)
+        return map(lambda spec: ResultsRangeDict(spec), out_specs)
 
     def getDatePublished(self):
         """
@@ -2259,16 +2309,11 @@ class AnalysisRequest(BaseFolder, ClientAwareMixin):
     def setParentAnalysisRequest(self, value):
         """Sets a parent analysis request, making the current a partition
         """
-        parent = self.getParentAnalysisRequest()
         self.Schema().getField("ParentAnalysisRequest").set(self, value)
         if not value:
             noLongerProvides(self, IAnalysisRequestPartition)
-            if parent and not parent.getDescendants(all_descendants=False):
-                noLongerProvides(self, IAnalysisRequestWithPartitions)
         else:
             alsoProvides(self, IAnalysisRequestPartition)
-            parent = self.getParentAnalysisRequest()
-            alsoProvides(parent, IAnalysisRequestWithPartitions)
 
     def getSecondaryAnalysisRequests(self):
         """Returns the secondary analysis requests from this analysis request
@@ -2431,35 +2476,6 @@ class AnalysisRequest(BaseFolder, ClientAwareMixin):
             html = html.replace(src, urljoin(base_url, src))
 
         return html
-
-    def getProgress(self):
-        """Returns the progress in percent of all analyses
-        """
-        review_state = api.get_review_status(self)
-
-        # Consider final states as 100%
-        # https://github.com/senaite/senaite.core/pull/1544#discussion_r379821841
-        if review_state in FINAL_STATES:
-            return 100
-
-        numbers = self.getAnalysesNum()
-
-        num_analyses = numbers[1] or 0
-        if not num_analyses:
-            return 0
-
-        # [verified, total, not_submitted, to_be_verified]
-        num_to_be_verified = numbers[3] or 0
-        num_verified = numbers[0] or 0
-
-        # 2 steps per analysis (submit, verify) plus one step for publish
-        max_num_steps = (num_analyses * 2) + 1
-        num_steps = num_to_be_verified + (num_verified * 2)
-        if not num_steps:
-            return 0
-        if num_steps > max_num_steps:
-            return 100
-        return (num_steps * 100) / max_num_steps
 
 
 registerType(AnalysisRequest, PROJECTNAME)

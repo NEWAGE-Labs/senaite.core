@@ -11,6 +11,8 @@
   <include file="analysisprofile.zcml"/>
   <include file="analysisreport.zcml"/>
   <include file="analysisservice.zcml"/>
+  <include file="analysisspec.zcml"/>
+  <include file="arimports.zcml"/>
   <include file="artemplate.zcml"/>
   <include file="attachment.zcml"/>
   <include file="auditlog.zcml"/>
@@ -18,9 +20,6 @@
   <include file="calcs.zcml"/>
   <include file="clientfolder.zcml"/>
   <include file="contact.zcml"/>
-  <include file="contentmenu.zcml"/>
-  <include file="controlpanel.zcml"/>
-  <include file="dynamic_analysisspec.zcml"/>
   <include file="instrument.zcml"/>
   <include file="instrumentlocation.zcml"/>
   <include file="instrumenttype.zcml"/>
@@ -38,16 +37,16 @@
 
   <include package=".analysisrequest"/>
   <include package=".batch"/>
-  <include package=".bootstrap"/>
   <include package=".client"/>
   <include package=".dashboard"/>
   <include package=".department"/>
   <include package=".fields"/>
   <include package=".idserver"/>
-  <include package=".portlets"/>
   <include package=".publish"/>
   <include package=".reports"/>
   <include package=".resultsimport"/>
+  <include package=".samplinground"/>
+  <include package=".srtemplate"/>
   <include package=".viewlets"/>
   <include package=".widgets"/>
   <include package=".workflow"/>
@@ -60,14 +59,6 @@
       permission="zope2.View"
       layer="bika.lims.interfaces.IBikaLIMS"
     />
-
-  <!-- Redirect to user's org view -->
-  <browser:page
-      for="*"
-      name="my_organization"
-      class=".myorganization.MyOrganizationView"
-      permission="zope2.View"
-      layer="bika.lims.interfaces.IBikaLIMS" />
 
   <browser:page
       for="*"
@@ -82,7 +73,7 @@
       for="*"
       name="partition_magic"
       class=".partition_magic.PartitionMagicView"
-      permission="senaite.core.permissions.AddAnalysisRequest"
+      permission="senaite.core.permissions.ManageAnalysisRequests"
       layer="bika.lims.interfaces.IBikaLIMS"
   />
 

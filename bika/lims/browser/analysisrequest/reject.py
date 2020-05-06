@@ -15,23 +15,17 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims.browser import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 
 
-class AnalysisRequestRejectPdfView(BrowserView):
+class AnalysisRequestRejectBase(object):
     """
-    View that renders the template to be used for the generation of a pdf to
-    be attached in the email for the notification of an Analysis Request
-    rejection action.
+    Provides helper methods that ease the work with rejection reasons
     """
-    template = ViewPageTemplateFile("templates/analysisrequest_retract_pdf.pt")
-
-    def __call__(self):
-        return self.template()
 
     def get_rejection_reasons(self, keyword=None):
         """
@@ -55,3 +49,33 @@ class AnalysisRequestRejectPdfView(BrowserView):
             return rejection_reasons.get(keyword, '') and [rejection_reasons.get(keyword, '')] or []
         return rejection_reasons.get(keyword, [])
 
+
+class AnalysisRequestRejectEmailView(BrowserView, AnalysisRequestRejectBase):
+    """
+    View that renders the template to be attached in the body of the email
+    for the notification of an Analysis Request rejection action.
+    """
+
+    template = ViewPageTemplateFile("templates/analysisrequest_retract_mail.pt")
+
+    def __init__(self, context, request):
+        super(AnalysisRequestRejectEmailView, self).__init__(context, request)
+
+    def __call__(self):
+        return self.template()
+
+
+class AnalysisRequestRejectPdfView(BrowserView, AnalysisRequestRejectBase):
+    """
+    View that renders the template to be used for the generation of a pdf to
+    be attached in the email for the notification of an Analysis Request
+    rejection action.
+    """
+
+    template = ViewPageTemplateFile("templates/analysisrequest_retract_pdf.pt")
+
+    def __init__(self, context, request):
+        super(AnalysisRequestRejectPdfView, self).__init__(context, request)
+
+    def __call__(self):
+        return self.template()

@@ -15,18 +15,47 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-import json
+from bika.lims import logger
+from bika.lims.utils import t
 from operator import itemgetter
-
-import plone
-import plone.protect
 from Products.Archetypes.config import REFERENCE_CATALOG
 from Products.CMFCore.utils import getToolByName
 
+import plone
+import plone.protect
+import json
+
 from bika.lims.workflow import getCurrentState
+
+
+class GetServices():
+    """ When a Category is selected in the add_analyses search screen, this
+        function returns a list of services from the selected category.
+    """
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
+
+    def __call__(self):
+        plone.protect.CheckAuthenticator(self.request)
+        bsc = getToolByName(self.context, 'bika_setup_catalog')
+
+        query = {
+            "portal_type": 'AnalysisService',
+            "is_active": True,
+            "sort_on": 'sortable_title',
+        }
+
+        getCategoryUID = self.request.get('getCategoryUID', '')
+        if getCategoryUID:
+            query["getCategoryUID"] = getCategoryUID
+
+        brains = bsc(query)
+        voc = [[brain.UID, brain.Title] for brain in brains]
+        return json.dumps(voc)
 
 
 class AttachAnalyses():

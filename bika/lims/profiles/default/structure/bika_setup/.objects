@@ -7,6 +7,7 @@ bika_analysisspecs,AnalysisSpecs
 bika_attachmenttypes,AttachmentTypes
 bika_batchlabels,BatchLabels
 bika_calculations,Calculations
+bika_identifiertypes,IdentifierTypes
 bika_instruments,Instruments
 bika_instrumenttypes,InstrumentTypes
 bika_instrumentlocations,InstrumentLocations
@@ -26,6 +27,8 @@ bika_samplepoints,SamplePoints
 bika_sampletypes,SampleTypes
 bika_storagelocations,StorageLocations
 bika_samplingdeviations,SamplingDeviations
+bika_samplingrounds,SamplingRounds
+bika_srtemplates,SRTemplates
 bika_subgroups,SubGroups
 bika_suppliers,Suppliers
 bika_worksheettemplates,WorksheetTemplates

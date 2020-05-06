@@ -15,81 +15,78 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-import itertools
-from string import Template
+import os
+import tempfile
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
-import six
-from Products.Archetypes.config import UID_CATALOG
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone.utils import _createObjectByType
 from Products.CMFPlone.utils import safe_unicode
-from zope.interface import alsoProvides
-from zope.lifecycleevent import modified
-
 from bika.lims import api
 from bika.lims import bikaMessageFactory as _
 from bika.lims import logger
-from bika.lims.api.mail import compose_email
-from bika.lims.api.mail import is_valid_email_address
-from bika.lims.api.mail import send_email
-from bika.lims.catalog import SETUP_CATALOG
 from bika.lims.idserver import renameAfterCreation
-from bika.lims.interfaces import IAnalysisRequest
+from bika.lims.interfaces import IAnalysisRequest, IReceived
 from bika.lims.interfaces import IAnalysisRequestRetest
 from bika.lims.interfaces import IAnalysisRequestSecondary
 from bika.lims.interfaces import IAnalysisService
-from bika.lims.interfaces import IReceived
 from bika.lims.interfaces import IRoutineAnalysis
+from bika.lims.utils import attachPdf
 from bika.lims.utils import changeWorkflowState
 from bika.lims.utils import copy_field_values
 from bika.lims.utils import createPdf
-from bika.lims.utils import get_link
+from bika.lims.utils import encode_header
 from bika.lims.utils import tmpID
+from bika.lims.utils import to_utf8
 from bika.lims.workflow import ActionHandlerPool
 from bika.lims.workflow import doActionFor
 from bika.lims.workflow import push_reindex_to_actions_pool
 from bika.lims.workflow.analysisrequest import AR_WORKFLOW_ID
 from bika.lims.workflow.analysisrequest import do_action_to_analyses
+from email.Utils import formataddr
+from zope.interface import alsoProvides
+from zope.lifecycleevent import modified
 
 
 def create_analysisrequest(client, request, values, analyses=None,
-                           results_ranges=None, prices=None):
-    """Creates a new AnalysisRequest (a Sample) object
-    :param client: The container where the Sample will be created
-    :param request: The current Http Request object
-    :param values: A dict, with keys as AnalaysisRequest's schema field names
-    :param analyses: List of Services or Analyses (brains, objects, UIDs,
-        keywords). Extends the list from values["Analyses"]
-    :param results_ranges: List of Results Ranges. Extends the results ranges
-        from the Specification object defined in values["Specification"]
-    :param prices: Mapping of AnalysisService UID -> price. If not set, prices
+                           partitions=None, specifications=None, prices=None):
+    """This is meant for general use and should do everything necessary to
+    create and initialise an AR and any other required auxilliary objects
+    (Sample, SamplePartition, Analysis...)
+    :param client:
+        The container (Client) in which the ARs will be created.
+    :param request:
+        The current Request object.
+    :param values:
+        a dict, where keys are AR|Sample schema field names.
+    :param analyses:
+        Analysis services list.  If specified, augments the values in
+        values['Analyses']. May consist of service objects, UIDs, or Keywords.
+    :param partitions:
+        A list of dictionaries, if specific partitions are required.  If not
+        specified, AR's sample is created with a single partition.
+    :param specifications:
+        These values augment those found in values['Specifications']
+    :param prices:
+        Allow different prices to be set for analyses.  If not set, prices
         are read from the associated analysis service.
     """
     # Don't pollute the dict param passed in
     values = dict(values.items())
 
-    # Resolve the Service uids of analyses to be added in the Sample. Values
-    # passed-in might contain Profiles and also values that are not uids. Also,
-    # additional analyses can be passed-in through either values or services
-    service_uids = to_services_uids(values=values, services=analyses)
-
-    # Remove the Analyses from values. We will add them manually
-    values.update({"Analyses": []})
-
-    # Create the Analysis Request and submit the form
+    # Create the Analysis Request
     ar = _createObjectByType('AnalysisRequest', client, tmpID())
+
+    # Resolve the services uids and set the analyses for this Analysis Request
+    service_uids = get_services_uids(context=client, values=values,
+                                     analyses_serv=analyses)
+    ar.setAnalyses(service_uids, prices=prices, specs=specifications)
+    values.update({"Analyses": service_uids})
     ar.processForm(REQUEST=request, values=values)
-
-    # Set the analyses manually
-    ar.setAnalyses(service_uids, prices=prices, specs=results_ranges)
-
-    # Handle hidden analyses from template and profiles
-    # https://github.com/senaite/senaite.core/issues/1437
-    # https://github.com/senaite/senaite.core/issues/1326
-    apply_hidden_services(ar)
 
     # Handle rejection reasons
     rejection_reasons = resolve_rejection_reasons(values)
@@ -131,7 +128,7 @@ def create_analysisrequest(client, request, values, analyses=None,
 
             # If rejection reasons have been set, reject automatically
             if rejection_reasons:
-                do_rejection(ar)
+                doActionFor(ar, "reject")
 
             # In "received" state already
             return ar
@@ -143,119 +140,177 @@ def create_analysisrequest(client, request, values, analyses=None,
 
     # If rejection reasons have been set, reject the sample automatically
     if rejection_reasons:
-        do_rejection(ar)
+        doActionFor(ar, "reject")
 
     return ar
 
 
-def apply_hidden_services(sample):
+def get_services_uids(context=None, analyses_serv=None, values=None):
     """
-    Applies the hidden setting to the sample analyses in accordance with the
-    settings from its template and/or profiles
-    :param sample: the sample that contains the analyses
-    """
-    hidden = list()
-
-    # Get the "hidden" service uids from the template
-    template = sample.getTemplate()
-    hidden = get_hidden_service_uids(template)
-
-    # Get the "hidden" service uids from profiles
-    profiles = sample.getProfiles()
-    hid_profiles = map(get_hidden_service_uids, profiles)
-    hid_profiles = list(itertools.chain(*hid_profiles))
-    hidden.extend(hid_profiles)
-
-    # Update the sample analyses
-    analyses = sample.getAnalyses(full_objects=True)
-    analyses = filter(lambda an: an.getServiceUID() in hidden, analyses)
-    for analysis in analyses:
-        analysis.setHidden(True)
-
-
-def get_hidden_service_uids(profile_or_template):
-    """Returns a list of service uids that are set as hidden
-    :param profile_or_template: ARTemplate or AnalysisProfile object
-    """
-    if not profile_or_template:
-        return []
-    settings = profile_or_template.getAnalysisServicesSettings()
-    hidden = filter(lambda ser: ser.get("hidden", False), settings)
-    return map(lambda setting: setting["uid"], hidden)
-
-
-def to_services_uids(services=None, values=None):
-    """
-    Returns a list of Analysis Services uids
-    :param services: A list of service items (uid, keyword, brain, obj, title)
+    This function returns a list of UIDs from analyses services from its
+    parameters.
+    :param analyses_serv: A list (or one object) of service-related info items.
+        see _resolve_items_to_service_uids() docstring.
+    :type analyses_serv: list
     :param values: a dict, where keys are AR|Sample schema field names.
-    :returns: a list of Analyses Services UIDs
+    :type values: dict
+    :returns: a list of analyses services UIDs
     """
-    def to_list(value):
-        if not value:
-            return []
-        if isinstance(value, six.string_types):
-            return [value]
-        if isinstance(value, (list, tuple)):
-            return value
-        logger.warn("Cannot convert to a list: {}".format(value))
-        return []
+    if not analyses_serv:
+        analyses_serv = []
+    if not values:
+        values = {}
 
-    services = services or []
-    values = values or {}
+    if not context or (not analyses_serv and not values):
+        raise RuntimeError(
+            "get_services_uids: Missing or wrong parameters.")
 
     # Merge analyses from analyses_serv and values into one list
-    uids = to_list(services) + to_list(values.get("Analyses"))
+    analyses_services = analyses_serv + (values.get("Analyses", None) or [])
 
-    # Convert them to a list of service uids
-    uids = filter(None, map(to_service_uid, uids))
+    # It is possible to create analysis requests
+    # by JSON petitions and services, profiles or types aren't allways send.
+    # Sometimes we can get analyses and profiles that doesn't match and we
+    # should act in consequence.
+    # Getting the analyses profiles
+    analyses_profiles = values.get('Profiles', [])
+    if not isinstance(analyses_profiles, (list, tuple)):
+        # Plone converts the incoming form value to a list, if there are
+        # multiple values; but if not, it will send a string (a single UID).
+        analyses_profiles = [analyses_profiles]
 
-    # Extend with service uids from profiles
-    profiles = to_list(values.get("Profiles"))
-    if profiles:
-        uid_catalog = api.get_tool(UID_CATALOG)
-        for brain in uid_catalog(UID=profiles):
+    if not analyses_services and not analyses_profiles:
+        return []
+
+    # Add analysis services UIDs from profiles to analyses_services variable.
+    if analyses_profiles:
+        uid_catalog = getToolByName(context, 'uid_catalog')
+        for brain in uid_catalog(UID=analyses_profiles):
             profile = api.get_object(brain)
-            uids.extend(profile.getRawService() or [])
+            # Only services UIDs
+            services_uids = profile.getRawService()
+            # _resolve_items_to_service_uids() will remove duplicates
+            analyses_services += services_uids
 
-    # Get the service uids without duplicates, but preserving the order
-    return list(dict.fromkeys(uids).keys())
+    return _resolve_items_to_service_uids(analyses_services)
 
 
-def to_service_uid(uid_brain_obj_str):
-    """Resolves the passed in element to a valid uid. Returns None if the value
-    cannot be resolved to a valid uid
+def _resolve_items_to_service_uids(items):
+    """ Returns a list of service uids without duplicates based on the items
+    :param items:
+        A list (or one object) of service-related info items. The list can be
+        heterogeneous and each item can be:
+        - Analysis Service instance
+        - Analysis instance
+        - Analysis Service title
+        - Analysis Service UID
+        - Analysis Service Keyword
+        If an item that doesn't match any of the criterias above is found, the
+        function will raise a RuntimeError
     """
-    if api.is_uid(uid_brain_obj_str) and uid_brain_obj_str != "0":
-        return uid_brain_obj_str
+    def resolve_to_uid(item):
+        if api.is_uid(item):
+            return item
+        elif IAnalysisService.providedBy(item):
+            return item.UID()
+        elif IRoutineAnalysis.providedBy(item):
+            return item.getServiceUID()
 
-    if api.is_object(uid_brain_obj_str):
-        obj = api.get_object(uid_brain_obj_str)
+        bsc = api.get_tool("bika_setup_catalog")
+        brains = bsc(portal_type='AnalysisService', getKeyword=item)
+        if brains:
+            return brains[0].UID
+        brains = bsc(portal_type='AnalysisService', title=item)
+        if brains:
+            return brains[0].UID
+        raise RuntimeError(
+            str(item) + " should be the UID, title, keyword "
+                        " or title of an AnalysisService.")
 
-        if IAnalysisService.providedBy(obj):
-            return api.get_uid(obj)
+    # Maybe only a single item was passed
+    if type(items) not in (list, tuple):
+        items = [items, ]
+    service_uids = map(resolve_to_uid, list(set(items)))
+    return list(set(service_uids))
 
-        elif IRoutineAnalysis.providedBy(obj):
-            return obj.getServiceUID()
 
-        else:
-            logger.error("Type not supported: {}".format(obj.portal_type))
-            return None
+def notify_rejection(analysisrequest):
+    """
+    Notifies via email that a given Analysis Request has been rejected. The
+    notification is sent to the Client contacts assigned to the Analysis
+    Request.
 
-    if isinstance(uid_brain_obj_str, six.string_types):
-        # Maybe is a keyword?
-        query = dict(portal_type="AnalysisService", getKeyword=uid_brain_obj_str)
-        brains = api.search(query, SETUP_CATALOG)
-        if len(brains) == 1:
-            return api.get_uid(brains[0])
+    :param analysisrequest: Analysis Request to which the notification refers
+    :returns: true if success
+    """
 
-        # Or maybe a title
-        query = dict(portal_type="AnalysisService", title=uid_brain_obj_str)
-        brains = api.search(query, SETUP_CATALOG)
-        if len(brains) == 1:
-            return api.get_uid(brains[0])
+    # We do this imports here to avoid circular dependencies until we deal
+    # better with this notify_rejection thing.
+    from bika.lims.browser.analysisrequest.reject import \
+        AnalysisRequestRejectPdfView, AnalysisRequestRejectEmailView
 
-    return None
+    arid = analysisrequest.getId()
+
+    # This is the template to render for the pdf that will be either attached
+    # to the email and attached the the Analysis Request for further access
+    tpl = AnalysisRequestRejectPdfView(analysisrequest, analysisrequest.REQUEST)
+    html = tpl.template()
+    html = safe_unicode(html).encode('utf-8')
+    filename = '%s-rejected' % arid
+    pdf_fn = tempfile.mktemp(suffix=".pdf")
+    pdf = createPdf(htmlreport=html, outfile=pdf_fn)
+    if pdf:
+        # Attach the pdf to the Analysis Request
+        attid = analysisrequest.aq_parent.generateUniqueId('Attachment')
+        att = _createObjectByType(
+            "Attachment", analysisrequest.aq_parent, attid)
+        att.setAttachmentFile(open(pdf_fn))
+        # Awkward workaround to rename the file
+        attf = att.getAttachmentFile()
+        attf.filename = '%s.pdf' % filename
+        att.setAttachmentFile(attf)
+        att.unmarkCreationFlag()
+        renameAfterCreation(att)
+        analysisrequest.addAttachment(att)
+        os.remove(pdf_fn)
+
+    # This is the message for the email's body
+    tpl = AnalysisRequestRejectEmailView(
+        analysisrequest, analysisrequest.REQUEST)
+    html = tpl.template()
+    html = safe_unicode(html).encode('utf-8')
+
+    # compose and send email.
+    mailto = []
+    lab = analysisrequest.bika_setup.laboratory
+    mailfrom = formataddr((encode_header(lab.getName()), lab.getEmailAddress()))
+    mailsubject = _('%s has been rejected') % arid
+    contacts = [analysisrequest.getContact()] + analysisrequest.getCCContact()
+    for contact in contacts:
+        name = to_utf8(contact.getFullname())
+        email = to_utf8(contact.getEmailAddress())
+        if email:
+            mailto.append(formataddr((encode_header(name), email)))
+    if not mailto:
+        return False
+    mime_msg = MIMEMultipart('related')
+    mime_msg['Subject'] = mailsubject
+    mime_msg['From'] = mailfrom
+    mime_msg['To'] = ','.join(mailto)
+    mime_msg.preamble = 'This is a multi-part MIME message.'
+    msg_txt = MIMEText(html, _subtype='html')
+    mime_msg.attach(msg_txt)
+    if pdf:
+        attachPdf(mime_msg, pdf, filename)
+
+    try:
+        host = getToolByName(analysisrequest, 'MailHost')
+        host.send(mime_msg.as_string(), immediate=True)
+    except:
+        logger.warning(
+            "Email with subject %s was not sent (SMTP connection error)" % mailsubject)
+
+    return True
 
 
 def create_retest(ar):
@@ -333,7 +388,7 @@ def create_retest(ar):
 
 def create_partition(analysis_request, request, analyses, sample_type=None,
                      container=None, preservation=None, skip_fields=None,
-                     internal_use=True):
+                     remove_primary_analyses=True, internal_use=True):
     """
     Creates a partition for the analysis_request (primary) passed in
     :param analysis_request: uid/brain/object of IAnalysisRequest type
@@ -343,6 +398,7 @@ def create_partition(analysis_request, request, analyses, sample_type=None,
     :param container: uid/brain/object of Container
     :param preservation: uid/brain/object of Preservation
     :param skip_fields: names of fields to be skipped on copy from primary
+    :param remove_primary_analyses: removes the analyses from the parent
     :return: the new partition
     """
     partition_skip_fields = [
@@ -388,14 +444,15 @@ def create_partition(analysis_request, request, analyses, sample_type=None,
     client = ar.getClient()
     analyses = list(set(map(api.get_object, analyses)))
     services = map(lambda an: an.getAnalysisService(), analyses)
+    specs = ar.getSpecification()
+    specs = specs and specs.getResultsRange() or []
+    partition = create_analysisrequest(client, request=request, values=record,
+                                       analyses=services, specifications=specs)
 
-    # Populate the root's ResultsRanges to partitions
-    results_ranges = ar.getResultsRange() or []
-    partition = create_analysisrequest(client,
-                                       request=request,
-                                       values=record,
-                                       analyses=services,
-                                       results_ranges=results_ranges)
+    # Remove analyses from the primary
+    if remove_primary_analyses:
+        analyses_ids = map(api.get_id, analyses)
+        ar.manage_delObjects(analyses_ids)
 
     # Reindex Parent Analysis Request
     ar.reindexObject(idxs=["isRootAncestor"])
@@ -467,104 +524,3 @@ def resolve_rejection_reasons(values):
         return [{"selected": selected, "other": other}]
 
     return []
-
-
-def do_rejection(sample, notify=None):
-    """Rejects the sample and if succeeds, generates the rejection pdf and
-    sends a notification email. If notify is None, the notification email will
-    only be sent if the setting in Setup is enabled
-    """
-    sample_id = api.get_id(sample)
-    if not sample.getRejectionReasons():
-        logger.warn("Cannot reject {} w/o rejection reasons".format(sample_id))
-        return
-
-    success, msg = doActionFor(sample, "reject")
-    if not success:
-        logger.warn("Cannot reject the sample {}".format(sample_id))
-        return
-
-    # Generate a pdf with the rejection reasons
-    pdf = get_rejection_pdf(sample)
-
-    # Attach the PDF to the sample
-    filename = "{}-rejected.pdf".format(sample_id)
-    sample.createAttachment(pdf, filename=filename)
-
-    # Do we need to send a notification email?
-    if notify is None:
-        setup = api.get_setup()
-        notify = setup.getNotifyOnSampleRejection()
-
-    if notify:
-        # Compose and send the email
-        mime_msg = get_rejection_mail(sample, pdf)
-        if mime_msg:
-            # Send the email
-            send_email(mime_msg)
-
-
-def get_rejection_pdf(sample):
-    """Generates a pdf with sample rejection reasons
-    """
-    # Avoid circular dependencies
-    from bika.lims.browser.analysisrequest.reject import \
-        AnalysisRequestRejectPdfView
-
-    # Render the html's rejection document
-    tpl = AnalysisRequestRejectPdfView(sample, api.get_request())
-    html = tpl.template()
-    html = safe_unicode(html).encode("utf-8")
-
-    # Generate the pdf
-    return createPdf(htmlreport=html)
-
-
-def get_rejection_mail(sample, rejection_pdf=None):
-    """Generates an email to sample contacts with rejection reasons
-    """
-    # Get the reasons
-    reasons = sample.getRejectionReasons()
-    reasons = reasons and reasons[0] or {}
-    reasons = reasons.get("selected", []) + [reasons.get("other")]
-    reasons = filter(None, reasons)
-    reasons = "<br/>- ".join(reasons)
-
-    # Render the email body
-    setup = api.get_setup()
-    lab_address = setup.laboratory.getPrintAddress()
-    email_body = Template(setup.getEmailBodySampleRejection())
-    email_body = email_body.safe_substitute({
-        "lab_address": "<br/>".join(lab_address),
-        "reasons": reasons and "<br/>-{}".format(reasons) or "",
-        "sample_id": api.get_id(sample),
-        "sample_link": get_link(api.get_url(sample), api.get_id(sample))
-    })
-
-    def to_valid_email_address(contact):
-        if not contact:
-            return None
-        address = contact.getEmailAddress()
-        if not is_valid_email_address(address):
-            return None
-        return address
-
-    # Get the recipients
-    _to = [sample.getContact()] + sample.getCCContact()
-    _to = map(to_valid_email_address, _to)
-    _to = filter(None, _to)
-
-    if not _to:
-        # Cannot send an e-mail without recipient!
-        logger.warn("No valid recipients for {}".format(api.get_id(sample)))
-        return None
-
-    lab = api.get_setup().laboratory
-    attachments = rejection_pdf and [rejection_pdf] or []
-
-    return compose_email(
-        from_addr=lab.getEmailAddress(),
-        to_addr=_to,
-        subj=_("%s has been rejected") % api.get_id(sample),
-        body=email_body,
-        attachments=attachments)

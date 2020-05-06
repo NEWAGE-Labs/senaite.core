@@ -57,6 +57,15 @@
   <permission>senaite.core: Manage Bika</permission>
  </configlet>
 
+ <configlet title="Identifier Types" action_id="bika_identifiertypes"
+            appId="bika.lims" category="bika" condition_expr=""
+            icon_expr="string:++resource++bika.lims.images/identifiertype.png"
+            url_expr="string:$portal_url/bika_setup/bika_identifiertypes"
+            visible="True"
+            i18n:attributes="title">
+     <permission>senaite.core: Manage Bika</permission>
+ </configlet>
+
  <configlet title="Analysis Specifications" action_id="bika_analysisspecs"
     appId="bika.lims" category="bika" condition_expr=""
     icon_expr="string:++resource++bika.lims.images/analysisspec.png"
@@ -275,10 +284,28 @@
   <permission>senaite.core: Manage Bika</permission>
  </configlet>
 
+ <configlet title="Sampling Round Templates" action_id="bika_srtemplates"
+    appId="bika.lims" category="bika" condition_expr=""
+    icon_expr="string:++resource++bika.lims.images/srtemplate.png"
+    url_expr="string:$portal_url/bika_setup/bika_srtemplates"
+    visible="True"
+    i18n:attributes="title">
+  <permission>senaite.core: Manage Bika</permission>
+ </configlet>
+
  <configlet title="Sub-groups" action_id="bika_subgroups"
     appId="bika.lims" category="bika" condition_expr=""
     icon_expr="string:++resource++bika.lims.images/batch.png"
     url_expr="string:$portal_url/bika_setup/bika_subgroups"
+    visible="True"
+    i18n:attributes="title">
+  <permission>senaite.core: Manage Bika</permission>
+ </configlet>
+
+ <configlet title="Sampling Rounds" action_id="bika_samplingrounds"
+    appId="bika.lims" category="bika" condition_expr=""
+    icon_expr="string:++resource++bika.lims.images/batch.png"
+    url_expr="string:$portal_url/bika_setup/bika_samplingrounds"
     visible="True"
     i18n:attributes="title">
   <permission>senaite.core: Manage Bika</permission>
@@ -291,15 +318,6 @@
     visible="True"
     i18n:attributes="title">
   <permission>senaite.core: Manage Bika</permission>
- </configlet>
-
- <configlet title="Dynamic Analysis Specifications" action_id="dynamic_analysisspecs"
-            appId="bika.lims" category="bika" condition_expr=""
-            icon_expr="string:++resource++bika.lims.images/analysisspec.png"
-            url_expr="string:$portal_url/bika_setup/dynamic_analysisspecs"
-            visible="True"
-            i18n:attributes="title">
-   <permission>senaite.core: Manage Bika</permission>
  </configlet>
 
 </object>

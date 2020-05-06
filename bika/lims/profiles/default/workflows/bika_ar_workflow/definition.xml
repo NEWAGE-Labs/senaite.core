@@ -74,6 +74,7 @@
   <permission>senaite.core: Field: Edit Sampler</permission>
   <permission>senaite.core: Field: Edit Sampling Date</permission>
   <permission>senaite.core: Field: Edit Sampling Deviation</permission>
+  <permission>senaite.core: Field: Edit Sampling Round</permission>
   <permission>senaite.core: Field: Edit Scheduled Sampler</permission>
   <permission>senaite.core: Field: Edit Specification</permission>
   <permission>senaite.core: Field: Edit Storage Location</permission>
@@ -161,6 +162,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="True"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Template" acquired="True"/>
@@ -253,6 +255,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="True"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="True"/>
     <!-- Make the field 'Template' readonly -->
@@ -351,6 +354,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="True"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="True"/>
     <!-- Make the field 'Template' readonly -->
@@ -439,6 +443,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="True"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="True"/>
     <!-- Make the field 'Template' readonly -->
@@ -525,6 +530,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="True"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="True"/>
     <!-- Make the field 'Template' readonly -->
@@ -607,6 +613,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="True"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="True"/>
     <!-- Make the field 'Template' readonly -->
@@ -696,6 +703,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="True"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="True"/>
     <!-- Make the field 'Template' readonly -->
@@ -781,6 +789,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="True"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="True"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="True"/>
     <!-- Make the field 'Template' readonly -->
@@ -867,6 +876,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="False"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Template" acquired="False"/>
@@ -943,6 +953,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="False"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Template" acquired="False"/>
@@ -1017,6 +1028,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="False"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Template" acquired="False"/>
@@ -1091,6 +1103,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="False"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Template" acquired="False"/>
@@ -1170,6 +1183,7 @@
     <permission-map name="senaite.core: Field: Edit Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Date" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Sampling Deviation" acquired="False"/>
+    <permission-map name="senaite.core: Field: Edit Sampling Round" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Scheduled Sampler" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Storage Location" acquired="False"/>
     <permission-map name="senaite.core: Field: Edit Template" acquired="False"/>
@@ -1269,14 +1283,16 @@
     </guard>
   </transition>
 
-  <!-- Transition: create_partitions -->
+  <!-- Transition: create_partitions
+  TODO: Consider to add "Transition: Add Partition" permission (~ "Add Sample"?)
+  -->
   <transition transition_id="create_partitions" title="Create partitions"
               new_state="sample_received" trigger="USER"
               before_script="" after_script=""
               i18n:attributes="title">
     <action url="" category="workflow" icon="">Create partitions</action>
     <guard>
-      <guard-permission>senaite.core: Add AnalysisRequest</guard-permission>
+      <guard-permission>senaite.core: Edit Results</guard-permission>
       <guard-expression>python:here.guard_handler("create_partitions")</guard-expression>
     </guard>
   </transition>

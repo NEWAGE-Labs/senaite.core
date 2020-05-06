@@ -15,10 +15,17 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
+from bika.lims import api
+from bika.lims import bikaMessageFactory as _
+from bika.lims.browser.fields import UIDReferenceField
+from bika.lims.config import PROJECTNAME
+from bika.lims.config import ManageBika
+from bika.lims.content.organisation import Organisation
+from bika.lims.interfaces import ILaboratory
 from Products.Archetypes.public import BooleanField
 from Products.Archetypes.public import BooleanWidget
 from Products.Archetypes.public import ImageField
@@ -26,29 +33,22 @@ from Products.Archetypes.public import ImageWidget
 from Products.Archetypes.public import IntegerField
 from Products.Archetypes.public import IntegerWidget
 from Products.Archetypes.public import Schema
+from Products.Archetypes.public import SelectionWidget
 from Products.Archetypes.public import StringField
 from Products.Archetypes.public import StringWidget
 from Products.Archetypes.public import TextAreaWidget
 from Products.Archetypes.public import TextField
 from Products.Archetypes.public import registerType
+from Products.Archetypes.utils import DisplayList
 from Products.CMFCore.utils import UniqueObject
 from Products.CMFPlone.utils import safe_unicode
 from zope.interface import implements
-
-from bika.lims import bikaMessageFactory as _
-from bika.lims.browser.fields import UIDReferenceField
-from bika.lims.browser.widgets import ReferenceWidget
-from bika.lims.catalog.bikasetup_catalog import SETUP_CATALOG
-from bika.lims.config import ManageBika
-from bika.lims.config import PROJECTNAME
-from bika.lims.content.organisation import Organisation
-from bika.lims.interfaces import ILaboratory
 
 DEFAULT_ACCREDITATION_PAGE_HEADER = """${lab_name} has been accredited as
 ${accreditation_standard} conformant by ${accreditation_body_abbr},
 ${accreditation_body_name}<br/><br/> ${accreditation_body_abbr} is the single
 national accreditation body assessing testing and calibration laboratories for
-compliance to the ISO/IEC 17025 standard.<br/><br/>\n The following analysis
+compliance to the ISO/IEC 17025 standard.<br/></br/>\n The following analysis
 services have been included in the ${accreditation_body_abbr} schedule of
 Accreditation for this Laboratory:
 """
@@ -70,17 +70,13 @@ schema = Organisation.schema.copy() + Schema((
         "Supervisor",
         required=0,
         allowed_types=("LabContact",),
+        vocabulary="_getLabContacts",
         write_permission=ManageBika,
-        widget=ReferenceWidget(
+        accessor="getSupervisorUID",
+        widget=SelectionWidget(
+            format="select",
             label=_("Supervisor"),
-            description=_("Supervisor of the Lab"),
-            showOn=True,
-            catalog_name=SETUP_CATALOG,
-            base_query=dict(
-                is_active=True,
-                sort_on="sortable_title",
-                sort_order="ascending",
-            ),
+            description=_("Supervisor of the Lab")
         )
     ),
 
@@ -197,6 +193,39 @@ class Laboratory(UniqueObject, Organisation):
     def Title(self):
         title = self.getName() and self.getName() or _("Laboratory")
         return safe_unicode(title).encode("utf-8")
+
+    def _getLabContacts(self):
+        bsc = api.get_tool("bika_setup_catalog")
+        # fallback - all Lab Contacts
+        pairs = [["", ""]]
+        for contact in bsc(portal_type="LabContact",
+                           is_active=True,
+                           sort_on="sortable_title"):
+            pairs.append((contact.UID, contact.Title))
+        return DisplayList(pairs)
+
+    @security.public
+    def getSupervisor(self):
+        """Returns the assigned supervisor
+
+        :returns: Supervisor object
+        """
+        return self.getField("Supervisor").get(self)
+
+    @security.public
+    def getSupervisorUID(self):
+        """Returns the UID of the assigned Supervisor
+
+        NOTE: This is the default accessor of the `Supervisor` schema field
+        and needed for the selection widget to render the selected value
+        properly in _view_ mode.
+
+        :returns: Supervisor UID
+        """
+        supervisor = self.getSupervisor()
+        if not supervisor:
+            return None
+        return api.get_uid(supervisor)
 
 
 registerType(Laboratory, PROJECTNAME)

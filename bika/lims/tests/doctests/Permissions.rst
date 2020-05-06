@@ -375,7 +375,7 @@ Test Permissions
 Exactly these roles have should have a `View` permission for clients folder::
 
     >>> get_roles_for_permission("View", clients)
-    ['Analyst', 'LabClerk', 'LabManager', 'Manager', 'Owner', 'Preserver', 'Publisher', 'RegulatoryInspector', 'Sampler', 'SamplingCoordinator', 'Verifier']
+    ['Authenticated']
 
 Exactly these roles should have a `View` permission for client object. Note that
 permissions for Client role are not granted, but for Owner. Lab Contacts are
@@ -393,7 +393,7 @@ Exactly these roles should have a `View` permission for client contact object:
 Exactly these roles have should have the `Access contents information` permission::
 
     >>> get_roles_for_permission("Access contents information", clients)
-    ['Analyst', 'LabClerk', 'LabManager', 'Manager', 'Owner', 'Preserver', 'Publisher', 'RegulatoryInspector', 'Sampler', 'SamplingCoordinator', 'Verifier']
+    ['Authenticated']
 
     >>> get_roles_for_permission("Access contents information", client)
     ['Analyst', 'LabClerk', 'LabManager', 'Manager', 'Owner', 'Preserver', 'Publisher', 'RegulatoryInspector', 'Sampler', 'SamplingCoordinator', 'Verifier']
@@ -404,7 +404,7 @@ Exactly these roles have should have the `Access contents information` permissio
 Exactly these roles have should have the `List folder contents` permission::
 
     >>> get_roles_for_permission("List folder contents", clients)
-    ['Analyst', 'LabClerk', 'LabManager', 'Manager', 'Owner', 'Preserver', 'Publisher', 'RegulatoryInspector', 'Sampler', 'SamplingCoordinator', 'Verifier']
+    ['Authenticated']
 
     >>> get_roles_for_permission("List folder contents", client)
     ['Analyst', 'LabClerk', 'LabManager', 'Manager', 'Owner', 'Preserver', 'Publisher', 'RegulatoryInspector', 'Sampler', 'SamplingCoordinator', 'Verifier']
@@ -478,9 +478,8 @@ Now we log in as the new user::
 The user can not access the clients folder yet::
 
     >>> browser.open(clients.absolute_url())
-    Traceback (most recent call last):
-    ...
-    Unauthorized: ...
+    >>> "client-1" not in browser.contents
+    True
 
     >>> browser.open(client.absolute_url())
     Traceback (most recent call last):
@@ -549,9 +548,8 @@ The user has no local owner role anymore on the client::
 The user can not access the client anymore::
 
     >>> browser.open(clients.absolute_url())
-    Traceback (most recent call last):
-    ...
-    Unauthorized: ...
+    >>> "client-1" not in browser.contents
+    True
 
     >>> browser.open(client.absolute_url())
     Traceback (most recent call last):

@@ -15,25 +15,18 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+from DateTime import DateTime
 from bika.lims import api
-from bika.lims.api.mail import send_email
-from bika.lims.api.mail import to_email_attachment
-from bika.lims.interfaces import IAnalysisRequestPartition
 from bika.lims.interfaces import IDetachedPartition
-from bika.lims.interfaces import IReceived
-from bika.lims.interfaces import IVerified
+from bika.lims.interfaces import IReceived, IVerified, IAnalysisRequestPartition
 from bika.lims.utils import changeWorkflowState
 from bika.lims.utils.analysisrequest import create_retest
-from bika.lims.workflow import doActionFor as do_action_for
 from bika.lims.workflow import get_prev_status_from_history
-from bika.lims.workflow.analysisrequest import AR_WORKFLOW_ID
-from bika.lims.workflow.analysisrequest import do_action_to_analyses
-from bika.lims.workflow.analysisrequest import do_action_to_ancestors
-from bika.lims.workflow.analysisrequest import do_action_to_descendants
-from DateTime import DateTime
+from bika.lims.workflow.analysisrequest import AR_WORKFLOW_ID, \
+    do_action_to_descendants, do_action_to_analyses, do_action_to_ancestors
 from zope.interface import alsoProvides
 from zope.interface import noLongerProvides
 
@@ -46,18 +39,6 @@ def before_sample(analysis_request):
         analysis_request.setDateSampled(DateTime())
     if not analysis_request.getSampler():
         analysis_request.setSampler(api.get_current_user().id)
-
-
-def after_no_sampling_workflow(analysis_request):
-    """Function triggered after "no_sampling_workflow transition for the
-    Analysis Request passed in is performed
-    """
-    setup = api.get_setup()
-    if setup.getAutoreceiveSamples():
-        # Auto-receive samples is enabled. Note transition to "received" state
-        # will only take place if the current user has enough privileges (this
-        # is handled by do_action_for already).
-        do_action_for(analysis_request, "receive")
 
 
 def after_reject(analysis_request):
@@ -112,16 +93,6 @@ def after_verify(analysis_request):
     do_action_to_descendants(analysis_request, "verify")
 
 
-def after_prepublish(analysis_request):
-    """Method triggered after a 'prepublish' transition for the Analysis
-    Request passed in is performed. Performs the 'publish' transition to the
-    descendant partitions.
-
-    Also see: https://github.com/senaite/senaite.core/pull/1428
-    """
-    do_action_to_descendants(analysis_request, "publish")
-
-
 def after_publish(analysis_request):
     """Method triggered after an 'publish' transition for the Analysis Request
     passed in is performed. Performs the 'publish' transition Publishes the
@@ -173,6 +144,9 @@ def after_sample(analysis_request):
     passed in is performed
     """
     analysis_request.setDateSampled(DateTime())
+    idxs = ['getDateSampled']
+    for analysis in analysis_request.getAnalyses(full_objects=True):
+        analysis.reindexObject(idxs=idxs)
 
 
 def after_rollback_to_receive(analysis_request):
@@ -201,9 +175,3 @@ def after_detach(analysis_request):
     # Reindex both the parent and the detached one
     analysis_request.reindexObject()
     parent.reindexObject()
-
-    # And the analyses too. aranalysesfield relies on a search against the
-    # catalog to return the analyses: calling `getAnalyses` to the parent
-    # will return all them, so no need to do the same with the detached
-    analyses = parent.getAnalyses(full_objects=True)
-    map(lambda an: an.reindexObject(), analyses)

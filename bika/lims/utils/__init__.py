@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import mimetypes
@@ -26,8 +26,6 @@ import urllib2
 from AccessControl import ModuleSecurityInfo
 from AccessControl import allow_module
 from AccessControl import getSecurityManager
-from Acquisition import aq_inner
-from Acquisition import aq_parent
 from email import Encoders
 from time import time
 
@@ -52,9 +50,6 @@ from zope.component import queryUtility
 from zope.event import notify
 from zope.i18n import translate
 from zope.i18n.locales import locales
-
-from bika.lims.interfaces import IClient
-from bika.lims.interfaces import IClientAwareMixin
 
 ModuleSecurityInfo('email.Utils').declarePublic('formataddr')
 allow_module('csv')
@@ -723,16 +718,6 @@ def get_link(href, value=None, **kwargs):
     return '<a href="{}" {}>{}</a>'.format(href, attr, anchor_value)
 
 
-def get_link_for(obj, **kwargs):
-    """Returns a well-formed html anchor to the object
-    """
-    if not obj:
-        return ""
-    href = api.get_url(obj)
-    value = api.get_title(obj)
-    return get_link(href=href, value=value, **kwargs)
-
-
 def get_email_link(email, value=None):
     """
     Returns a well-formed link to an email address. If email is None/empty,
@@ -914,43 +899,3 @@ def to_choices(display_list):
             "ResultValue": item[0],
             "ResultText": item[1]},
         display_list.items())
-
-
-def chain(obj):
-    """Generator to walk the acquistion chain of object, considering that it
-    could be a function.
-
-    If the thing we are accessing is actually a bound method on an instance,
-    then after we've checked the method itself, get the instance it's bound to
-    using im_self, so that we can continue to walk up the acquistion chain from
-    it (incidentally, this is why we can't juse use aq_chain()).
-    """
-    context = aq_inner(obj)
-
-    while context is not None:
-        yield context
-
-        func_object = getattr(context, "im_self", None)
-        if func_object is not None:
-            context = aq_inner(func_object)
-        else:
-            # Don't use aq_inner() since portal_factory (and probably other)
-            # things, depends on being able to wrap itself in a fake context.
-            context = aq_parent(context)
-
-
-def get_client(obj):
-    """Returns the client the object passed-in belongs to, if any
-
-    This walks the acquisition chain up until we find something which provides
-    either IClient or IClientAwareMixin
-    """
-    for obj in chain(obj):
-        if IClient.providedBy(obj):
-            return obj
-        elif IClientAwareMixin.providedBy(obj):
-            # ClientAwareMixin can return a Client, even if there is no client
-            # in the acquisition chain
-            return obj.getClient()
-
-    return None

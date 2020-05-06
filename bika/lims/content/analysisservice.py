@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -32,6 +32,7 @@ from bika.lims.content.abstractbaseanalysis import AbstractBaseAnalysis
 from bika.lims.content.abstractbaseanalysis import schema
 from bika.lims.interfaces import IAnalysisService
 from bika.lims.interfaces import IDeactivable
+from bika.lims.interfaces import IHaveIdentifiers
 from bika.lims.utils import to_utf8 as _c
 from magnitude import mg
 from Products.Archetypes.public import BooleanField
@@ -418,7 +419,7 @@ schema.moveField('InterimFields', after='Calculation')
 
 
 class AnalysisService(AbstractBaseAnalysis):
-    implements(IAnalysisService, IDeactivable)
+    implements(IAnalysisService, IHaveIdentifiers, IDeactivable)
     security = ClassSecurityInfo()
     schema = schema
     displayContentsTab = False
@@ -428,6 +429,14 @@ class AnalysisService(AbstractBaseAnalysis):
         from bika.lims.idserver import renameAfterCreation
 
         return renameAfterCreation(self)
+
+    @security.public
+    def getCalculationTitle(self):
+        """Used to populate catalog values
+        """
+        calculation = self.getCalculation()
+        if calculation:
+            return calculation.Title()
 
     @security.public
     def getCalculation(self):
@@ -480,15 +489,18 @@ class AnalysisService(AbstractBaseAnalysis):
             is unset, only the methods assigned manually to that service
             are returned.
         """
-        if not self.getInstrumentEntryOfResults():
-            # No need to go further, just return the manually assigned methods
-            return self.getMethods()
+        methods = self.getMethods()
+        muids = [m.UID() for m in methods]
+        if self.getInstrumentEntryOfResults():
+            # Add the methods from the instruments capable to perform
+            # this analysis service
+            for ins in self.getInstruments():
+                for method in ins.getMethods():
+                    if method and method.UID() not in muids:
+                        methods.append(method)
+                        muids.append(method.UID())
 
-        # Return the manually assigned methods plus those from instruments
-        method_uids = self.getAvailableMethodUIDs()
-        query = dict(portal_type="Method", UID=method_uids)
-        brains = api.search(query, "bika_setup_catalog")
-        return map(api.get_object_by_uid, brains)
+        return methods
 
     @security.public
     def getAvailableMethodUIDs(self):
@@ -496,13 +508,7 @@ class AnalysisService(AbstractBaseAnalysis):
         Returns the UIDs of the available methods. it is used as a
         vocabulary to fill the selection list of 'Methods' field.
         """
-        method_uids = self.getRawMethods()
-        if self.getInstrumentEntryOfResults():
-            for instrument in self.getInstruments():
-                method_uids.extend(instrument.getRawMethods())
-            method_uids = filter(None, method_uids)
-            method_uids = list(set(method_uids))
-        return method_uids
+        return [m.UID() for m in self.getAvailableMethods()]
 
     @security.public
     def getMethods(self):
@@ -525,7 +531,7 @@ class AnalysisService(AbstractBaseAnalysis):
 
         :returns: List of method UIDs
         """
-        return self.getRawMethods()
+        return map(api.get_uid, self.getMethods())
 
     @security.public
     def getInstruments(self):
@@ -545,7 +551,7 @@ class AnalysisService(AbstractBaseAnalysis):
 
         :returns: List of instrument UIDs
         """
-        return self.getRawInstruments()
+        return map(api.get_uid, self.getInstruments())
 
     @security.public
     def getAvailableInstruments(self):

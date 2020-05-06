@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from Acquisition import aq_get
@@ -212,6 +212,16 @@ class SamplePointVocabulary(BikaContentVocabulary):
 
 
 SamplePointVocabularyFactory = SamplePointVocabulary()
+
+
+class SampleTypeVocabulary(BikaContentVocabulary):
+    def __init__(self):
+        BikaContentVocabulary.__init__(self,
+                                       ['bika_setup/bika_sampletypes', ],
+                                       ['SampleType', ])
+
+
+SampleTypeVocabularyFactory = SampleTypeVocabulary()
 
 
 class AnalysisServiceVocabulary(BikaContentVocabulary):

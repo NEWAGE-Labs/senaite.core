@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from Products.CMFCore.permissions import AccessContentsInformation
@@ -41,7 +41,12 @@ def ObjectModifiedEventHandler(instance, event):
         # Mark/Unmark all analyses with IInternalUse to control their
         # visibility in results reports
         for analysis in instance.objectValues("Analysis"):
-            analysis.setInternalUse(internal_use)
+            if internal_use:
+                alsoProvides(analysis, IInternalUse)
+            else:
+                noLongerProvides(analysis, IInternalUse)
+
+            # Reindex analysis security in catalogs
             analysis.reindexObjectSecurity()
 
         # If internal use is True, cascade same setting to partitions
@@ -57,10 +62,6 @@ def AfterTransitionEventHandler(instance, event):
     This function does not superseds workflow.analysisrequest.events, rather it
     only updates the permissions in accordance with InternalUse value
     """
-    # Permissions for a given object change after transitions to meet with the
-    # workflow definition. InternalUse prevents Clients to access to Samples
-    # and analyses as well. Therefore, we have to update the permissions
-    # manually here to override those set by default
     update_internal_use_permissions(instance)
 
 

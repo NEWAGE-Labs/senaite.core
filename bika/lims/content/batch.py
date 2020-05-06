@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -30,7 +30,6 @@ from bika.lims.browser.widgets import RemarksWidget
 from bika.lims.catalog import CATALOG_ANALYSIS_REQUEST_LISTING
 from bika.lims.config import PROJECTNAME
 from bika.lims.content.bikaschema import BikaFolderSchema
-from bika.lims.content.clientawaremixin import ClientAwareMixin
 from bika.lims.interfaces import IBatch
 from bika.lims.interfaces import ICancellable
 from bika.lims.interfaces import IClient
@@ -55,6 +54,42 @@ from zope.interface import implements
 @indexer(IBatch)
 def BatchDate(instance):
     return instance.Schema().getField('BatchDate').get(instance)
+
+
+class InheritedObjectsUIField(RecordsField):
+    """XXX bika.lims.RecordsWidget doesn't cater for multiValued fields
+    InheritedObjectsUI is a RecordsField because we want the RecordsWidget,
+    but the values are stored in ReferenceField 'InheritedObjects'
+    """
+
+    def get(self, instance, **kwargs):
+        # Return the formatted contents of InheritedObjects field.
+        field = instance.Schema()['InheritedObjects']
+        value = field.get(instance)
+        return [{'Title': x.Title(),
+                 'ObjectID': x.id,
+                 'Description': x.Description()} for x in value]
+
+    def getRaw(self, instance, **kwargs):
+        # Return the formatted contents of InheritedObjects field.
+        field = instance.Schema()['InheritedObjects']
+        value = field.get(instance)
+        return [{'Title': x.Title(),
+                 'ObjectID': x.id,
+                 'Description': x.Description()} for x in value]
+
+    def set(self, instance, value, **kwargs):
+        _field = instance.Schema().getField('InheritedObjects')
+        uids = []
+        if value:
+            bc = getToolByName(instance, 'bika_catalog')
+            ids = [x['ObjectID'] for x in value]
+            if ids:
+                proxies = bc(id=ids)
+                if proxies:
+                    uids = [x.UID for x in proxies]
+        RecordsField.set(self, instance, value)
+        return _field.set(instance, uids)
 
 
 schema = BikaFolderSchema.copy() + Schema((
@@ -119,9 +154,77 @@ schema = BikaFolderSchema.copy() + Schema((
 
     RemarksField(
         'Remarks',
+        searchable=True,
         widget=RemarksWidget(
             label=_('Remarks'),
         )
+    ),
+
+    ReferenceField(
+        'InheritedObjects',
+        required=0,
+        multiValued=True,
+        allowed_types=('AnalysisRequest'),  # batches are expanded on save
+        referenceClass=HoldingReference,
+        relationship='BatchInheritedObjects',
+        widget=ReferenceWidget(
+            visible=False,
+        ),
+    ),
+
+    InheritedObjectsUIField(
+        'InheritedObjectsUI',
+        required=False,
+        type='InheritedObjects',
+        subfields=('Title', 'ObjectID', 'Description'),
+        subfield_sizes={
+            'Title': 25,
+            'ObjectID': 25,
+            'Description': 50,
+        },
+
+        subfield_labels={
+            'Title': _('Title'),
+            'ObjectID': _('Object ID'),
+            'Description': _('Description')
+        },
+
+        widget=bikaRecordsWidget(
+            label=_("Inherit From"),
+            description=_(
+                "Include all samples belonging to the selected objects."),
+            innerJoin="<br/>",
+            combogrid_options={
+                'Title': {
+                    'colModel': [
+                        {'columnName': 'Title', 'width': '25',
+                         'label': _('Title'), 'align': 'left'},
+                        {'columnName': 'ObjectID', 'width': '25',
+                         'label': _('Object ID'), 'align': 'left'},
+                        {'columnName': 'Description', 'width': '50',
+                         'label': _('Description'), 'align': 'left'},
+                        {'columnName': 'UID', 'hidden': True},
+                    ],
+                    'url': 'getAnalysisContainers',
+                    'showOn': False,
+                    'width': '600px'
+                },
+                'ObjectID': {
+                    'colModel': [
+                        {'columnName': 'Title', 'width': '25',
+                         'label': _('Title'), 'align': 'left'},
+                        {'columnName': 'ObjectID', 'width': '25',
+                         'label': _('Object ID'), 'align': 'left'},
+                        {'columnName': 'Description', 'width': '50',
+                         'label': _('Description'), 'align': 'left'},
+                        {'columnName': 'UID', 'hidden': True},
+                    ],
+                    'url': 'getAnalysisContainers',
+                    'showOn': False,
+                    'width': '600px'
+                },
+            },
+        ),
     ),
 ))
 
@@ -142,7 +245,7 @@ schema.moveField('title', before='description')
 schema.moveField('Client', after='title')
 
 
-class Batch(ATFolder, ClientAwareMixin):
+class Batch(ATFolder):
     """A Batch combines multiple ARs into a logical unit
     """
     implements(IBatch, ICancellable)
@@ -156,19 +259,46 @@ class Batch(ATFolder, ClientAwareMixin):
         from bika.lims.idserver import renameAfterCreation
         renameAfterCreation(self)
 
-    def getClient(self):
-        """Retrieves the Client the current Batch is assigned to
+    def Title(self):
+        """Return the Batch ID if title is not defined
         """
-        # We override here getClient from ClientAwareMixin because te schema's
-        # field Client is only used to allow the user to assign the batch to a
-        # client in edit form. The entered value is used in
-        # ObjectModifiedEventHandler to move the batch to the Client's folder,
-        # so the value stored in the Schema's is not used anymore
-        # See https://github.com/senaite/senaite.core/pull/1450
+        titlefield = self.Schema().getField('title')
+        if titlefield.widget.visible:
+            return safe_unicode(self.title).encode('utf-8')
+        else:
+            return safe_unicode(self.id).encode('utf-8')
+
+    @deprecated("This method will be removed in senaite.core 1.2.0")
+    def _getCatalogTool(self):
+        from bika.lims.catalog import getCatalog
+        return getCatalog(self)
+
+    def getClient(self):
+        """Retrieves the Client for which the current Batch is attached to
+           Tries to retrieve the Client from the Schema property, but if not
+           found, searches for linked ARs and retrieve the Client from the
+           first one. If the Batch has no client, returns None.
+        """
+        client = self.Schema().getField('Client').get(self)
+        if client:
+            return client
         client = self.aq_parent
         if IClient.providedBy(client):
             return client
-        return None
+
+    def getClientTitle(self):
+        client = self.getClient()
+        if client:
+            return client.Title()
+        return ""
+
+    def getClientUID(self):
+        """This index is required on batches so that batch listings can be
+        filtered by client
+        """
+        client = self.getClient()
+        if client:
+            return client.UID()
 
     def getContactTitle(self):
         return ""
@@ -248,17 +378,6 @@ class Batch(ATFolder, ClientAwareMixin):
         uids = [uid for uid in self.Schema().getField('BatchLabels').get(self)]
         labels = [label.getObject().title for label in uc(UID=uids)]
         return labels
-
-    def getProgress(self):
-        """Returns the progress in percent of all samples
-        """
-        total_progress = 0
-        samples = self.getAnalysisRequests()
-        total = len(samples)
-        if total > 0:
-            sample_progresses = map(lambda s: s.getProgress(), samples)
-            total_progress = sum(sample_progresses) / total
-        return total_progress
 
 
 registerType(Batch, PROJECTNAME)

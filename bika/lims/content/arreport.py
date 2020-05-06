@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -26,7 +26,6 @@ from bika.lims.browser.widgets import DateTimeWidget
 from bika.lims.browser.widgets import ReferenceWidget
 from bika.lims.config import PROJECTNAME
 from bika.lims.content.bikaschema import BikaSchema
-from bika.lims.content.clientawaremixin import ClientAwareMixin
 from bika.lims.interfaces import IARReport
 from plone.app.blob.field import BlobField
 from Products.Archetypes import atapi
@@ -137,7 +136,7 @@ schema["id"].required = False
 schema["title"].required = False
 
 
-class ARReport(BaseFolder, ClientAwareMixin):
+class ARReport(BaseFolder):
     """An AnalysisRequest report, containing the report itself in pdf and html
        format. It includes information about the date when was published, from
        whom, the report recipients (and their emails) and the publication mode

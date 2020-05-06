@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 def contentmenu_factories_available(self):
@@ -23,6 +23,7 @@ def contentmenu_factories_available(self):
     """
     if hasattr(self._addContext(), 'portal_type') \
     and self._addContext().portal_type in [
+        'ARImport',
         'Batch',
         'Client',
         'AnalysisRequest',

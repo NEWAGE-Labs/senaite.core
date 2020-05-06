@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from collections import Mapping
@@ -26,10 +26,6 @@ from bika.lims.content.analysisspec import ResultsRangeDict
 from bika.lims.interfaces import IAnalysis, IReferenceAnalysis, \
     IResultOutOfRange
 from zope.component._api import getAdapters
-
-from bika.lims.interfaces import IDuplicateAnalysis
-from bika.lims.interfaces import ISubmitted
-from bika.lims.interfaces.analysis import IRequestAnalysis
 
 
 def is_out_of_range(brain_or_object, result=_marker):
@@ -58,41 +54,10 @@ def is_out_of_range(brain_or_object, result=_marker):
 
     if result is _marker:
         result = api.safe_getattr(analysis, "getResult", None)
-
-    if result in [None, '']:
-        # Empty result
+    if not api.is_floatable(result):
+        # Result is empty/None or not a valid number
         return False, False
 
-    if IDuplicateAnalysis.providedBy(analysis):
-        # Result range for duplicate analyses is calculated from the original
-        # result, applying a variation % in shoulders. If the analysis has
-        # result options enabled or string results enabled, system returns an
-        # empty result range for the duplicate: result must match %100 with the
-        # original result
-        original = analysis.getAnalysis()
-        original_result = original.getResult()
-
-        # Does original analysis have a valid result?
-        if original_result in [None, '']:
-            return False, False
-
-        # Does original result type matches with duplicate result type?
-        if api.is_floatable(result) != api.is_floatable(original_result):
-            return True, True
-
-        # Does analysis has result options enabled or non-floatable?
-        if analysis.getResultOptions() or not api.is_floatable(original_result):
-            # Let's always assume the result is 'out from shoulders', cause we
-            # consider the shoulders are precisely the duplicate variation %
-            out_of_range = original_result != result
-            return out_of_range, out_of_range
-
-    elif not api.is_floatable(result):
-        # A non-duplicate with non-floatable result. There is no chance to know
-        # if the result is out-of-range
-        return False, False
-
-    # Convert result to a float
     result = api.to_float(result)
 
     # Note that routine analyses, duplicates and reference analyses all them
@@ -183,38 +148,3 @@ def get_formatted_interval(results_range, default=_marker):
     max_bracket = max_operator == 'leq' and ']' or ')'
 
     return "{}{};{}{}".format(min_bracket, min_str, max_str, max_bracket)
-
-
-def is_result_range_compliant(analysis):
-    """Returns whether the result range from the analysis matches with the
-    result range for the service counterpart defined in the Sample
-    """
-    if not IRequestAnalysis.providedBy(analysis):
-        return True
-
-    if IDuplicateAnalysis.providedBy(analysis):
-        # Does not make sense to apply compliance to a duplicate, cause its
-        # valid range depends on the result of the original analysis
-        return True
-
-    rr = analysis.getResultsRange()
-    service_uid = rr.get("uid", None)
-    if not api.is_uid(service_uid):
-        return True
-
-    # Compare with Sample
-    sample = analysis.getRequest()
-
-    # If no Specification is set, assume is compliant
-    specification = sample.getRawSpecification()
-    if not specification:
-        return True
-
-    # Compare with the Specification that was initially set to the Sample
-    sample_rr = sample.getResultsRange(search_by=service_uid)
-    if not sample_rr:
-        # This service is not defined in Sample's ResultsRange, we
-        # assume this *does not* break the compliance
-        return True
-
-    return rr == sample_rr

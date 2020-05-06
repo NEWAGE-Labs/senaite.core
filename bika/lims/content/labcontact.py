@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import sys
@@ -28,7 +28,6 @@ from bika.lims.config import PROJECTNAME
 from bika.lims.content.contact import Contact
 from bika.lims.content.person import Person
 from bika.lims.interfaces import IDeactivable
-from bika.lims.interfaces import IHaveDepartment
 from bika.lims.interfaces import ILabContact
 from Products.Archetypes import atapi
 from Products.Archetypes.Field import ImageField
@@ -97,7 +96,7 @@ schema["Department"].widget.visible = False
 class LabContact(Contact):
     """A Lab Contact, which can be linked to a System User
     """
-    implements(ILabContact, IHaveDepartment, IDeactivable)
+    implements(ILabContact, IDeactivable)
 
     schema = schema
     displayContentsTab = False
@@ -112,14 +111,6 @@ class LabContact(Contact):
         """Return the contact's Fullname as title
         """
         return safe_unicode(self.getFullname()).encode("utf-8")
-
-    @security.public
-    def getDepartment(self):
-        """Required by IHaveDepartment. Returns the list of departments this
-        laboratory contact is assigned to plus the default department
-        """
-        departments = self.getDepartments() + [self.getDefaultDepartment()]
-        return filter(None, list(set(departments)))
 
     @security.public
     def getDefaultDepartment(self):

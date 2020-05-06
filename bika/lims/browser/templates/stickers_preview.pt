@@ -220,7 +220,8 @@
        }
 
        // If autoprint=1, render the pdf automatically
-       if (location.href.indexOf("autoprint=1") != -1) {
+       var autoprint = $.query.get('autoprint');
+       if (autoprint == '1') {
          printPdf();
          window.location = $('#cancel-button').attr('data-url');
        }
@@ -272,8 +273,10 @@
           </tal:tick>
         </div>
         <tal:stickers repeat="item view/items">
-          <div class='sticker'
-               tal:content='structure python:view.renderItem(item)'></div>
+          <tal:sticker define="item_id python:item.getId()">
+            <div class='sticker'
+                 tal:content='structure python:view.renderItem(item)'></div>
+          </tal:sticker>
         </tal:stickers>
       </div>
     </div>

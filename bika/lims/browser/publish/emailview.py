@@ -15,12 +15,11 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import inspect
 import itertools
-import re
 from collections import OrderedDict
 from string import Template
 
@@ -431,16 +430,18 @@ class EmailView(BrowserView):
     def publish_samples(self):
         """Publish all samples of the reports
         """
-        samples = set()
-
-        # collect primary + contained samples of the reports
-        for report in self.reports:
-            samples.add(report.getAnalysisRequest())
-            samples.update(report.getContainedAnalysisRequests())
-
-        # publish all samples + their partitions
-        for sample in samples:
-            self.publish(sample)
+        reports = self.reports
+        for report in reports:
+            # publish the primary sample
+            primary_sample = report.getAnalysisRequest()
+            self.publish(primary_sample)
+            # publish the contained samples
+            contained_samples = report.getContainedAnalysisRequests()
+            for sample in contained_samples:
+                # skip the primary sample
+                if sample == primary_sample:
+                    continue
+                self.publish(sample)
 
     def publish(self, sample):
         """Set status to prepublished/published/republished
@@ -459,8 +460,10 @@ class EmailView(BrowserView):
             wf.doActionFor(sample, transition)
             # Commit the changes
             transaction.commit()
+            return True
         except WorkflowException as e:
             logger.error(e)
+            return False
 
     def render_email_template(self, template):
         """Return the rendered email template
@@ -729,7 +732,7 @@ class EmailView(BrowserView):
         # CC Contacts
         cc = filter(None, map(recipient_from_contact, ar.getCCContact()))
         # CC Emails
-        cc_emails = ar.getCCEmails(as_list=True)
+        cc_emails = map(lambda x: x.strip(), ar.getCCEmails().split(","))
         cc_emails = filter(None, map(recipient_from_email, cc_emails))
 
         return to + cc + cc_emails

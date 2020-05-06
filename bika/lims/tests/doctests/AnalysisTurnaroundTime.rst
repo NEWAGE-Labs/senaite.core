@@ -17,6 +17,7 @@ Needed Imports:
     >>> from bika.lims.api.analysis import get_formatted_interval
     >>> from bika.lims.api.analysis import is_out_of_range
     >>> from bika.lims.content.analysisrequest import AnalysisRequest
+    >>> from bika.lims.content.sample import Sample
     >>> from bika.lims.utils.analysisrequest import create_analysisrequest
     >>> from bika.lims.utils import tmpID
     >>> from bika.lims.workflow import doActionFor

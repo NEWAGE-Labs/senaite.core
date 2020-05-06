@@ -15,70 +15,97 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
-from Products.ATContentTypes.lib.historyaware import HistoryAwareMixin
+from bika.lims import api
+from bika.lims import bikaMessageFactory as _
+from bika.lims.browser.fields import UIDReferenceField
+from bika.lims.browser.widgets import AnalysisSpecificationWidget
+from bika.lims.config import PROJECTNAME
+from bika.lims.content.bikaschema import BikaSchema
+from bika.lims.interfaces import IAnalysisSpec, IDeactivable
 from Products.Archetypes import atapi
 from Products.Archetypes.public import BaseFolder
+from Products.Archetypes.public import ComputedField
+from Products.Archetypes.public import ComputedWidget
+from Products.Archetypes.public import ReferenceWidget
 from Products.Archetypes.public import Schema
+from Products.Archetypes.utils import DisplayList
+from Products.ATContentTypes.lib.historyaware import HistoryAwareMixin
+from Products.ATExtensions.field.records import RecordsField
+from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone.utils import safe_unicode
 from zope.i18n import translate
 from zope.interface import implements
 
-from bika.lims import bikaMessageFactory as _
-from bika.lims.browser.fields import UIDReferenceField
-from bika.lims.browser.fields import ResultsRangesField
-from bika.lims.browser.widgets import AnalysisSpecificationWidget
-from bika.lims.browser.widgets import ReferenceWidget
-from bika.lims.catalog.bikasetup_catalog import SETUP_CATALOG
-from bika.lims.config import PROJECTNAME
-from bika.lims.content.bikaschema import BikaSchema
-from bika.lims.content.clientawaremixin import ClientAwareMixin
-from bika.lims.content.sampletype import SampleTypeAwareMixin
-from bika.lims.interfaces import IAnalysisSpec
-from bika.lims.interfaces import IDeactivable
 
 schema = Schema((
 
     UIDReferenceField(
         'SampleType',
+        vocabulary="getSampleTypes",
         allowed_types=('SampleType',),
-        required=1,
         widget=ReferenceWidget(
+            checkbox_bound=0,
             label=_("Sample Type"),
-            showOn=True,
-            catalog_name=SETUP_CATALOG,
-            base_query=dict(
-                is_active=True,
-                sort_on="sortable_title",
-                sort_order="ascending"
-            ),
         ),
     ),
 
-    UIDReferenceField(
-        'DynamicAnalysisSpec',
-        allowed_types=('DynamicAnalysisSpec',),
-        required=0,
-        widget=ReferenceWidget(
-            label=_("Dynamic Analysis Specification"),
-            showOn=True,
-            catalog_name=SETUP_CATALOG,
-            base_query=dict(
-                sort_on="sortable_title",
-                sort_order="ascending"
-            ),
+    ComputedField(
+        'SampleTypeTitle',
+        expression="context.getSampleType().Title() if context.getSampleType() else ''",
+        widget=ComputedWidget(
+            visible=False,
         ),
     ),
 
+    ComputedField(
+        'SampleTypeUID',
+        expression="context.getSampleType().UID() if context.getSampleType() else ''",
+        widget=ComputedWidget(
+            visible=False,
+        ),
+    ),
 )) + BikaSchema.copy() + Schema((
 
-    ResultsRangesField(
+    RecordsField(
         'ResultsRange',
+        # schemata = 'Specifications',
         required=1,
+        type='resultsrange',
+        subfields=(
+            'keyword',
+            'min_operator',
+            'min',
+            'max_operator',
+            'max',
+            'warn_min',
+            'warn_max',
+            'hidemin',
+            'hidemax',
+            'rangecomment'
+        ),
+        required_subfields=('keyword',),
+        subfield_validators={
+            'min': 'analysisspecs_validator',
+            'max': 'analysisspecs_validator',
+        },
+        subfield_labels={
+            'keyword': _('Analysis Service'),
+            'min_operator': _('Min operator'),
+            'min': _('Min'),
+            'max_operator': _('Max operator'),
+            'max': _('Max'),
+            'warn_min': _('Min warn'),
+            'warn_max': _('Max warn'),
+            'hidemin': _('< Min'),
+            'hidemax': _('> Max'),
+            'rangecomment': _('Range Comment'),
+        },
         widget=AnalysisSpecificationWidget(
+            checkbox_bound=0,
             label=_("Specifications"),
             description=_(
                 "'Min' and 'Max' values indicate a valid results range. Any "
@@ -90,14 +117,21 @@ schema = Schema((
                 "in lists and results reports instead of the real result.")
         ),
     ),
+
+    ComputedField(
+        'ClientUID',
+        expression="context.aq_parent.UID()",
+        widget=ComputedWidget(
+            visible=False,
+        ),
+    ),
 ))
 
 schema['description'].widget.visible = True
 schema['title'].required = True
 
 
-class AnalysisSpec(BaseFolder, HistoryAwareMixin, ClientAwareMixin,
-                   SampleTypeAwareMixin):
+class AnalysisSpec(BaseFolder, HistoryAwareMixin):
     """Analysis Specification
     """
     implements(IAnalysisSpec, IDeactivable)
@@ -115,10 +149,13 @@ class AnalysisSpec(BaseFolder, HistoryAwareMixin, ClientAwareMixin,
         """ Return the title if possible, else return the Sample type.
         Fall back on the instance's ID if there's no sample type or title.
         """
+        title = ''
         if self.title:
             title = self.title
         else:
-            title = self.getSampleTypeTitle() or ""
+            sampletype = self.getSampleType()
+            if sampletype:
+                title = sampletype.Title()
         return safe_unicode(title).encode('utf-8')
 
     def contextual_title(self):
@@ -128,6 +165,52 @@ class AnalysisSpec(BaseFolder, HistoryAwareMixin, ClientAwareMixin,
         else:
             return self.title + " (" + translate(_("Client")) + ")"
 
+    security.declarePublic('getResultsRangeDict')
+
+    def getResultsRangeDict(self):
+        """Return a dictionary with the specification fields for each
+           service. The keys of the dictionary are the keywords of each
+           analysis service. Each service contains a dictionary in which
+           each key is the name of the spec field:
+           specs['keyword'] = {'min': value,
+                               'max': value,
+                               'warnmin': value,
+                               ... }
+        """
+        specs = {}
+        subfields = self.Schema()['ResultsRange'].subfields
+        for spec in self.getResultsRange():
+            keyword = spec['keyword']
+            specs[keyword] = {}
+            for key in subfields:
+                if key not in ['uid', 'keyword']:
+                    specs[keyword][key] = spec.get(key, '')
+        return specs
+
+    security.declarePublic('getRemainingSampleTypes')
+
+    def getSampleTypes(self, active_only=True):
+        """Return all sampletypes
+        """
+        catalog = api.get_tool("bika_setup_catalog")
+        query = {
+            "portal_type": "SampleType",
+            # N.B. The `sortable_title` index sorts case sensitive. Since there
+            #      is no sort key for sample types, it makes more sense to sort
+            #      them alphabetically in the selection
+            "sort_on": "title",
+            "sort_order": "ascending"
+        }
+        results = catalog(query)
+        if active_only:
+            results = filter(api.is_active, results)
+        sampletypes = map(
+            lambda brain: (brain.UID, brain.Title), results)
+        return DisplayList(sampletypes)
+
+    def getClientUID(self):
+        return self.aq_parent.UID()
+
 
 atapi.registerType(AnalysisSpec, PROJECTNAME)
 
@@ -136,20 +219,12 @@ class ResultsRangeDict(dict):
 
     def __init__(self, *arg, **kw):
         super(ResultsRangeDict, self).__init__(*arg, **kw)
-        self["uid"] = self.uid
         self["min"] = self.min
         self["max"] = self.max
-        self["error"] = self.error
         self["warn_min"] = self.warn_min
         self["warn_max"] = self.warn_max
         self["min_operator"] = self.min_operator
         self["max_operator"] = self.max_operator
-
-    @property
-    def uid(self):
-        """The uid of the service this ResultsRange refers to
-        """
-        return self.get("uid", '')
 
     @property
     def min(self):
@@ -158,10 +233,6 @@ class ResultsRangeDict(dict):
     @property
     def max(self):
         return self.get("max", '')
-
-    @property
-    def error(self):
-        return self.get("error", '')
 
     @property
     def warn_min(self):
@@ -202,22 +273,3 @@ class ResultsRangeDict(dict):
     @max_operator.setter
     def max_operator(self, value):
         self['max_operator'] = value
-
-    def __eq__(self, other):
-        if isinstance(other, dict):
-            other = ResultsRangeDict(other)
-
-        if isinstance(other, ResultsRangeDict):
-            # Balance both dicts with same keys, but without corrupting them
-            current = dict(filter(lambda o: o[0] in other, self.items()))
-            other = dict(filter(lambda o: o[0] in current, other.items()))
-
-            # Ensure that all values are str (sometimes ranges are stored as
-            # numeric values and sometimes are stored as str)
-            current = dict(map(lambda o: (o[0], str(o[1])), current.items()))
-            other = dict(map(lambda o: (o[0], str(o[1])), other.items()))
-
-            # Check if both are equal
-            return current == other
-
-        return super(ResultsRangeDict, self).__eq__(other)

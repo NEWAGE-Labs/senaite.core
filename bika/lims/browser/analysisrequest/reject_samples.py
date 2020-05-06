@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
@@ -26,9 +26,8 @@ from bika.lims import workflow as wf
 from bika.lims.browser import BrowserView, ulocalized_time
 from bika.lims.catalog.analysisrequest_catalog import \
     CATALOG_ANALYSIS_REQUEST_LISTING
+from bika.lims.utils.analysisrequest import notify_rejection
 from plone.memoize import view
-
-from bika.lims.utils.analysisrequest import do_rejection
 
 
 class RejectSamplesView(BrowserView):
@@ -98,14 +97,14 @@ class RejectSamplesView(BrowserView):
                 obj = api.get_object_by_uid(sample_uid)
                 rejection_reasons = {
                     "other": other,
-                    "selected": reasons
-                }
+                    "selected": reasons }
                 obj.setRejectionReasons([rejection_reasons])
-
-                # Reject the sample
-                notify = sample.get("notify", "") == "on"
-                do_rejection(obj, notify=notify)
+                wf.doActionFor(obj, "reject")
                 processed.append(obj)
+
+                # Client needs to be notified?
+                if sample.get("notify", "") == "on":
+                    notify_rejection(obj)
 
             if not processed:
                 return self.redirect(message=_("No samples were rejected"))

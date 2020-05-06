@@ -15,16 +15,21 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from views.batches import ClientBatchesView
 from views.analysisrequests import ClientAnalysisRequestsView
 from views.analysisprofiles import ClientAnalysisProfilesView
 from views.artemplates import ClientARTemplatesView
+from views.srtemplates import ClientSamplingRoundTemplatesView
 from views.samplepoints import ClientSamplePointsView
 from views.analysisspecs import ClientAnalysisSpecsView
 from views.attachments import ClientAttachmentsView
 from views.orders import ClientOrdersView
 from views.contacts import ClientContactsView
 from views.contacts import ClientContactVocabularyFactory
+from views.samplingrounds import ClientSamplingRoundsView
+
+from ajax import ReferenceWidgetVocabulary
+from ajax import ajaxGetClientInfo

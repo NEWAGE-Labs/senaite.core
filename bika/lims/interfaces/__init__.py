@@ -15,36 +15,16 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from zope.interface import Interface
 
 
-class ISenaiteSiteRoot(Interface):
-    """Marker interface for the Senaite Site Root
-    """
-
-
 class IBikaLIMS(Interface):
     """Marker interface that defines a Zope 3 browser layer.
-
-    N.B. Please use ISenaiteSite interface
-    """
-
-
-class ISenaiteSite(IBikaLIMS):
-    """Marker interface for Zope 3 browser layers.
-    """
-
-
-class IAutoGenerateID(Interface):
-    """Auto-generate ID with ID server
-    """
-
-
-class IMultiCatalogBehavior(Interface):
-    """Support multiple catalogs for Dexterity contents
+       If you need to register a viewlet only for the
+       "bika" theme, this interface must be its layer
     """
 
 
@@ -110,21 +90,6 @@ class IBatchLabels(Interface):
 
 class IAnalysisRequest(Interface):
     """Analysis Request
-    """
-
-
-class IHaveDescendants(Interface):
-    """Marker interface for objects that have Descendants
-    """
-
-    def getDescendants(self, all_descendants=False):
-        """Returns descendants of this object
-        :param all_descendants: if True, returns all descendants from hierarchy
-        """
-
-
-class IAnalysisRequestWithPartitions(IHaveDescendants):
-    """Marker interface for Analysis Requests that have Partitions
     """
 
 
@@ -194,6 +159,11 @@ class IReportFolder(Interface):
     """Report folder
     """
 
+# TODO Remove in >v1.3.0
+class ISample(Interface):
+    """Sample
+    """
+
 
 class ISampleCondition(Interface):
     """Sample Condition
@@ -212,6 +182,16 @@ class ISampleMatrix(Interface):
 
 class ISampleMatrices(Interface):
     """Sample Matrices
+    """
+
+
+class ISamplePartition(Interface):
+    """Sample
+    """
+
+
+class ISamplesFolder(Interface):
+    """Samples Folder
     """
 
 
@@ -252,6 +232,16 @@ class IReportsFolder(Interface):
 
 class IInvoice(Interface):
     """Invoice
+    """
+
+
+class IInvoiceBatch(Interface):
+    """Invoice Batch
+    """
+
+
+class IInvoiceFolder(Interface):
+    """Invoices Folder
     """
 
 
@@ -326,12 +316,14 @@ class IContainerTypes(Interface):
 
 
 class IIdentifierTypes(Interface):
-    """TODO: Remove in senaite.core 1.3.3
+    """Marker interface for identifier types
     """
 
 
 class IHaveIdentifiers(Interface):
-    """TODO: Remove in senaite.core 1.3.3
+    """If this interface is provided by an AT object, the object will
+    automatically be given an 'Identifiers' field, which will be associated
+    with the bika_identifiertypes in site setup.
     """
 
 
@@ -382,11 +374,6 @@ class IInstrumentValidation(Interface):
 
 class IAnalysisSpecs(Interface):
     """Marker interface for Analysis Specs
-    """
-
-
-class IDynamicResultsRange(Interface):
-    """Marker interface for Dynamic Result Range
     """
 
 
@@ -454,9 +441,6 @@ class ILabProducts(Interface):
     """Marker interface for Lab Products
     """
 
-class ILabProduct(Interface):
-    """Marker interface for a LabProduct
-    """
 
 class ISamplePoint(Interface):
     """Marker interface for a Sample Point
@@ -485,6 +469,16 @@ class ISampleType(Interface):
 
 class ISampleTypes(Interface):
     """Marker interface for Sample Types
+    """
+
+
+class ISamplingRoundTemplates(Interface):
+    """Marker interface for Sampling Round Templates
+    """
+
+
+class ISamplingRoundTemplate(Interface):
+    """Marker interface for a Sampling Round Template
     """
 
 
@@ -532,9 +526,6 @@ class IWorksheetTemplates(Interface):
     """Marker interface for Worksheet Templates
     """
 
-class IWorksheetTemplate(Interface):
-    """Marker interface for Worksheet Template
-    """
 
 class IBikaCatalog(Interface):
     """Marker interface for bika_catalog
@@ -710,6 +701,16 @@ class ISetupDataImporter(Interface):
     """
 
 
+class IARImportFolder(Interface):
+    """Marker interface for a folder that contains ARImports
+    """
+
+
+class IARImport(Interface):
+    """Marker interface for an ARImport
+    """
+
+
 class IPricelist(Interface):
     """Folder view marker for Pricelist
     """
@@ -805,6 +806,35 @@ class IReflexRuleFolder(Interface):
 class IDepartment(Interface):
     """Marker interface for a Department
     """
+
+
+class IAcquireFieldDefaults(Interface):
+    """Register this adapter to define if and how the value for a field is
+    acquired.
+
+    An instance's schema fields may delegate the responsibility of providing
+    default values to their acquisition parents by providing an attribute
+    "acquire=True".
+
+    During object creation this behaviour will walk up the acquisition chain
+    looking for a matching field, and if one is found it's current value will
+    be used as the default for this field.
+
+    By default the acquisition chain is searched for a field named
+    identically to the destination field, but this can be configured with an
+    attribute "acquire_fieldname='FieldName'".
+
+    If the source field is found on a parent but contains a False-ish value,
+    or if the adapter otherwise returns None (this will be the case if the
+    walker reaches the SiteRoot), the schema's original AT default is used.
+
+    No attempt is made to type check the fields - the value of the parent
+    field is simply injected into getDefaults().
+    """
+
+    def __call__(context, field):
+        """This function must return the surrogate (source) value directly.
+        """
 
 
 class IProxyField(Interface):
@@ -918,169 +948,4 @@ class IInternalUse(Interface):
 
 class IDetachedPartition(Interface):
     """Marker interface for samples that have been detached from its primary
-    """
-
-
-class IGuardAdapter(Interface):
-    """Marker interface for guard adapters
-    """
-
-    def guard(self, transition):
-        """Return False if you want to block the transition
-        """
-
-
-class IAddSampleFieldsFlush(Interface):
-    """Marker interface for field dependencies flush for Add Sample form
-    """
-
-    def get_flush_settings(self):
-        """Returns a dict where the key is the name of the field and the value
-        is an array dependencies as field names
-        """
-
-
-class IAddSampleObjectInfo(Interface):
-    """Marker interface for objects metadata mapping
-    """
-
-    def get_object_info(self):
-        """Returns the dict representation of the context object for its
-        correct consumption by Sample Add form:
-
-        {'id': <id_of_the_object>,
-         'uid': <uid_of_the_object>,
-         'title': <title_of_the_object>,
-         'filter_queries': {
-             <dependent_field_name>: {
-                 <catalog_index>: <criteria>
-             }
-         },
-         'field_values': {
-             <dependent_field_name>: {
-                <uid>: <dependent_uid>,
-                <title>: <dependent_title>
-            }
-         }
-
-        Besides the basic keys (id, uid, title), two additional keys can be
-        provided:
-        - filter_queries: contains the filter queries for other fields to be
-          applied when the value of current field changes.
-        - field_values: contains default values for other fields to be applied
-          when the value of the current field changes.
-        """
-
-
-class IClientAwareMixin(Interface):
-    """Marker interface for objects that can be bound to a Client, either
-    because they can be added inside a Client folder or because it can be
-    assigned through a Reference field
-    """
-
-    def getClient(self):
-        """Returns the client this object is bound to, if any
-        """
-
-    def getClientUID(self):
-        """Returns the client UID this object is bound to, if any
-        """
-
-
-class ISampleTypeAwareMixin(Interface):
-    """Marker interface for objects that can be assigned to one, or multiple
-    SampleType objects through a ReferenceField
-    """
-
-    def getSampleType(self):
-        """Returns the sample type(s) assigned to this object, if any
-        """
-
-    def getSampleTypeUID(self):
-        """Returns the UID(s) of the Sample Type(s) assigned to this object
-        """
-
-    def getSampleTypeTitle(self):
-        """Returns the title or a comma separated list of sample type titles
-        """
-
-
-class IHavePrice(Interface):
-    """Marker interface for objects that have a Price
-    """
-
-    def getPrice(self):
-        """Returns the price of the instance
-        """
-
-    def getTotalPrice(self):
-        """Returns the total price of the instance
-        """
-
-
-class IHaveInstrument(Interface):
-    """Marker interface for objects that have Instrument(s) assigned
-    """
-
-    def getInstrument(self):
-        """Returns the instrument or instruments the instance is assigned to
-        """
-
-
-class IHaveDepartment(Interface):
-    """Marker interface for objects that have Department(s) assigned
-    """
-
-    def getDepartment(self):
-        """Returns the department or departments the instance is assigned to
-        """
-
-
-class IOrganisation(Interface):
-    """Marker interface for IOrganisation object
-    """
-
-    def getName(self):
-        """Returns the name of the organisation. Masks Title()
-        """
-
-
-class IHaveAnalysisCategory(Interface):
-    """Marker interface for objects that have AnalysisCategory(ies) assigned
-    """
-
-    def getCategory(self):
-        """Returns the category(ies) assigned to this instance
-        """
-
-    def getCategoryUID(self):
-        """Returns the UID of the category(ies) assigned to this instance
-        """
-
-    def getCategoryTitle(self):
-        """Returns the title of the category(ies) assigned to this instance
-        """
-
-
-class IARImportFolder(Interface):
-    """Marker interface for a folder that contains ARImports
-    TODO: Legacy type. Remove after 1.3.3
-    """
-
-
-class IARImport(Interface):
-    """Marker interface for an ARImport
-    TODO: Legacy type. Remove after 1.3.3
-    """
-
-
-class ISamplingRoundTemplates(Interface):
-    """Marker interface for Sampling Round Templates
-    TODO: Legacy type. Remove after 1.3.3
-    """
-
-
-class ISamplingRoundTemplate(Interface):
-    """Marker interface for a Sampling Round Template
-    TODO: Legacy type. Remove after 1.3.3
     """

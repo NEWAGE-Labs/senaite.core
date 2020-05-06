@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -101,7 +101,6 @@ schema = BikaSchema.copy() + Schema((
         widget=StringWidget(
             label=_("Email Address"),
         ),
-        validators=("isEmail", )
     ),
 
     StringField(
@@ -252,6 +251,42 @@ class Person(BaseFolder):
                     self.getSurname())
             else:
                 fullname = '%s %s' % (self.getFirstname(), self.getSurname())
+        return fullname.strip()
+
+    def getListingname(self):
+        """Person's Fullname as Surname, Firstname
+        """
+        fn = self.getFirstname()
+        mi = self.getMiddleinitial()
+        md = self.getMiddlename()
+        sn = self.getSurname()
+        fullname = ""
+        if fn and sn:
+            fullname = "%s, %s" % (
+                self.getSurname(),
+                self.getFirstname())
+        elif fn or sn:
+            fullname = "%s %s" % (
+                self.getSurname(),
+                self.getFirstname())
+        else:
+            fullname = ""
+
+        if fullname != "":
+            if mi and md:
+                fullname = "%s %s %s" % (
+                    fullname,
+                    self.getMiddleinitial(),
+                    self.getMiddlename())
+            elif mi:
+                fullname = "%s %s" % (
+                    fullname,
+                    self.getMiddleinitial())
+            elif md:
+                fullname = "%s %s" % (
+                    fullname,
+                    self.getMiddlename())
+
         return fullname.strip()
 
     Title = getFullname

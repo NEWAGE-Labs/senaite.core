@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -76,11 +76,7 @@ class AnalysisSpecsView(BikaListingView):
                 "index": "sortable_title"}),
             ("SampleType", {
                 "title": _("Sample Type"),
-                "index": "sampletype_title"}),
-            ("DynamicSpec", {
-                "title": _("Dynamic Specification"),
-                "sortable": False,
-            })
+                "index": "getSampleTypeTitle"}),
         ))
 
         self.review_states = [
@@ -128,12 +124,6 @@ class AnalysisSpecsView(BikaListingView):
             title = sampletype.Title()
             url = sampletype.absolute_url()
             item["replace"]["SampleType"] = get_link(url, value=title)
-
-        dynamic_spec = obj.getDynamicAnalysisSpec()
-        if dynamic_spec:
-            title = dynamic_spec.Title()
-            url = api.get_url(dynamic_spec)
-            item["replace"]["DynamicSpec"] = get_link(url, value=title)
 
         return item
 

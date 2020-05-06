@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -25,7 +25,6 @@ from bika.lims.browser.fields import UIDReferenceField
 from bika.lims.config import PROJECTNAME
 from bika.lims.content.bikaschema import BikaSchema
 from bika.lims.interfaces import IDeactivable
-from bika.lims.interfaces import IHaveInstrument
 from bika.lims.interfaces import IMethod
 from bika.lims.utils import t
 from plone.app.blob.field import FileField as BlobFileField
@@ -177,7 +176,7 @@ schema["description"].widget.description = _(
 class Method(BaseFolder):
     """Method content
     """
-    implements(IMethod, IDeactivable, IHaveInstrument)
+    implements(IMethod, IDeactivable)
 
     security = ClassSecurityInfo()
     displayContentsTab = False
@@ -231,12 +230,6 @@ class Method(BaseFolder):
         items.sort(lambda x, y: cmp(x[1], y[1]))
         items.insert(0, ("", t(_("None"))))
         return DisplayList(items)
-
-    def getInstrument(self):
-        """Instruments capable to perform this method.
-        Required by IHaveInstrument
-        """
-        return self.getInstruments()
 
     def getInstruments(self):
         """Instruments capable to perform this method

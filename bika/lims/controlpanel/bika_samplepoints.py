@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -23,24 +23,20 @@ import json
 
 import plone
 from Products.ATContentTypes.content import schemata
+from Products.Archetypes import PloneMessageFactory as _p
 from Products.Archetypes import atapi
-from Products.CMFCore.permissions import ModifyPortalContent
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone.utils import safe_unicode
-from plone.app.folder.folder import ATFolder
-from plone.app.folder.folder import ATFolderSchema
-from zope.interface.declarations import implements
-
-from bika.lims import api
 from bika.lims import bikaMessageFactory as _
-from bika.lims.api.security import check_permission
 from bika.lims.browser import BrowserView
 from bika.lims.browser.bika_listing import BikaListingView
-from bika.lims.catalog import SETUP_CATALOG
 from bika.lims.config import PROJECTNAME
 from bika.lims.interfaces import ISamplePoints
 from bika.lims.permissions import AddSamplePoint
-from bika.lims.utils import get_link_for
+from bika.lims.utils import get_link
+from plone.app.folder.folder import ATFolder
+from plone.app.folder.folder import ATFolderSchema
+from zope.interface.declarations import implements
 
 
 # TODO: Separate content and view into own modules!
@@ -51,15 +47,11 @@ class SamplePointsView(BikaListingView):
     def __init__(self, context, request):
         super(SamplePointsView, self).__init__(context, request)
 
-        self.catalog = SETUP_CATALOG
+        self.catalog = "bika_setup_catalog"
         self.contentFilter = {
             "portal_type": "SamplePoint",
             "sort_on": "sortable_title",
             "sort_order": "ascending",
-            "path": {
-                "query": api.get_path(self.context),
-                "depth": 1,
-            }
         }
 
         self.context_actions = {
@@ -77,7 +69,7 @@ class SamplePointsView(BikaListingView):
 
         self.show_select_row = False
         self.show_select_column = True
-        self.pagesize = 50
+        self.pagesize = 25
 
         self.columns = collections.OrderedDict((
             ("Title", {
@@ -87,13 +79,17 @@ class SamplePointsView(BikaListingView):
                 "title": _("Description"),
                 "index": "Description",
                 "toggle": True}),
+            ("Owner", {
+                "title": _p("Owner"),
+                "sortable": False,
+                "toggle": True}),
             ("getComposite", {
                 "title": _("Composite"),
                 "sortable": False,
                 "toggle": False}),
             ("SampleTypes", {
                 "title": _("Sample Types"),
-                "index": "sampletype_title",
+                "index": "getSampleTypeTitle",
                 "toggle": True}),
         ))
 
@@ -134,12 +130,32 @@ class SamplePointsView(BikaListingView):
             the template
         :index: current index of the item
         """
-        item["replace"]["Title"] = get_link_for(obj)
-        item["Description"] = obj.Description()
+
+        title = obj.Title()
+        description = obj.Description()
+        url = obj.absolute_url()
+
+        item["replace"]["Title"] = get_link(url, value=title)
+        item["Description"] = description
 
         sample_types = obj.getSampleTypes()
-        links = map(get_link_for, sample_types)
-        item["replace"]["SampleTypes"] = ", ".join(links)
+        if sample_types:
+            links = map(
+                lambda st: get_link(st.absolute_url(),
+                                    value=st.Title(),
+                                    css_class="link"),
+                sample_types)
+            item["replace"]["SampleTypes"] = ", ".join(links)
+        else:
+            item["SampleTypes"] = ""
+
+        parent = obj.aq_parent
+        if parent.portal_type == "Client":
+            item["Owner"] = parent.aq_parent.Title()
+            item["replace"]["Owner"] = get_link(
+                parent.absolute_url(), value=parent.getName())
+        else:
+            item["Owner"] = self.context.bika_setup.laboratory.Title()
 
         return item
 
