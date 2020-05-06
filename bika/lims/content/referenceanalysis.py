@@ -15,43 +15,54 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
-
 from DateTime import DateTime
-from Products.Archetypes.public import *
-from Products.CMFCore.utils import getToolByName
-from bika.lims.config import PROJECTNAME, STD_TYPES
+from Products.Archetypes.Field import StringField
+from Products.Archetypes.public import Schema
+from Products.Archetypes.public import registerType
+from plone.app.blob.field import BlobField
+from zope.interface import implements
+
+from bika.lims import api
+from bika.lims.config import PROJECTNAME
+from bika.lims.config import STD_TYPES
 from bika.lims.content.abstractanalysis import AbstractAnalysis
 from bika.lims.content.abstractanalysis import schema
 from bika.lims.content.analysisspec import ResultsRangeDict
 from bika.lims.interfaces import IReferenceAnalysis
-from bika.lims.subscribers import skip
-from bika.lims.workflow import doActionFor
-from plone.app.blob.field import BlobField
-from zope.interface import implements
 
 schema = schema.copy() + Schema((
     StringField(
-        'ReferenceType',
+        "ReferenceType",
         vocabulary=STD_TYPES,
     ),
     BlobField(
-        'RetractedAnalysesPdfReport',
+        "RetractedAnalysesPdfReport",
     ),
     StringField(
-        'ReferenceAnalysesGroupID',
+        "ReferenceAnalysesGroupID",
     )
 ))
 
 
 class ReferenceAnalysis(AbstractAnalysis):
+    """Reference Analysis Content
+    """
     implements(IReferenceAnalysis)
     security = ClassSecurityInfo()
-    displayContentsTab = False
     schema = schema
+
+    @security.public
+    def getPrice(self):
+        """Return the price
+
+        :return: the price (without VAT or Member Discount) in decimal format
+        """
+        field = self.getField("Price")
+        return field.get(self)
 
     @security.public
     def getSupplier(self):
@@ -111,7 +122,9 @@ class ReferenceAnalysis(AbstractAnalysis):
         :return: A dictionary with the keys min and max
         :rtype: dict
         """
-        specs = ResultsRangeDict(result="")
+        specs = ResultsRangeDict(uid=api.get_uid(self),
+                                 keyword=self.getKeyword(),
+                                 result="")
         sample = self.getSample()
         if not sample:
             return specs

@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -28,15 +28,17 @@ from bika.lims import api
 from bika.lims import logger
 from bika.lims.browser import ulocalized_time
 from bika.lims.decorators import synchronized
-from bika.lims.interfaces import IActionHandlerPool
+from bika.lims.interfaces import IActionHandlerPool, IGuardAdapter
 from bika.lims.interfaces import IJSONReadExtender
 from bika.lims.jsonapi import get_include_fields
 from bika.lims.utils import changeWorkflowState  # noqa
 from bika.lims.utils import t
 from bika.lims.workflow.indexes import ACTIONS_TO_INDEXES
+from itertools import groupby
 from Products.Archetypes.config import UID_CATALOG
 from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.WorkflowCore import WorkflowException
+from zope.component import getAdapters
 from zope.interface import implements
 from ZPublisher.HTTPRequest import HTTPRequest
 
@@ -275,6 +277,9 @@ def get_prev_status_from_history(instance, status=None):
     target = status or api.get_workflow_status_of(instance)
     history = getReviewHistory(instance, reverse=True)
     history = map(lambda event: event["review_state"], history)
+    # Remove consecutive duplicates
+    history = map(lambda i: i[0], groupby(history))
+
     if target not in history or history.index(target) == len(history)-1:
         return None
     return history[history.index(target)+1]
@@ -386,6 +391,13 @@ def guard_handler(instance, transition_id):
     """
     if not instance:
         return True
+
+    # If adapters are found, core's guard will only be evaluated if, and only
+    # if, ALL "pre-guards" return True
+    for name, ad in getAdapters((instance,), IGuardAdapter):
+        if ad.guard(transition_id) is False:
+            return False
+
     clazz_name = instance.portal_type
     # Inspect if bika.lims.workflow.<clazzname>.<guards> module exists
     wf_module = _load_wf_module('{0}.guards'.format(clazz_name.lower()))

@@ -133,14 +133,6 @@
     />
 
     <browser:page
-      for="bika.lims.interfaces.IIdentifierTypes"
-      name="folder_view"
-      class=".bika_identifiertypes.IdentifierTypesView"
-      permission="senaite.core.permissions.ManageBika"
-      layer="bika.lims.interfaces.IBikaLIMS"
-    />
-
-    <browser:page
       for="bika.lims.interfaces.IInstruments"
       name="folder_view"
       class=".bika_instruments.InstrumentsView"
@@ -221,14 +213,6 @@
     />
 
     <browser:page
-      for="bika.lims.interfaces.ISamplingRoundTemplates"
-      name="folder_view"
-      class=".bika_srtemplates.SamplingRoundTemplatesView"
-      permission="senaite.core.permissions.ManageBika"
-      layer="bika.lims.interfaces.IBikaLIMS"
-    />
-
-    <browser:page
       for="bika.lims.interfaces.ISubGroups"
       name="folder_view"
       class=".bika_subgroups.SubGroupsView"
@@ -285,14 +269,6 @@
       layer="bika.lims.interfaces.IBikaLIMS"
     />
 
-    <browser:page
-      for="bika.lims.controlpanel.bika_samplingrounds.ISamplingRounds"
-      name="folder_view"
-      class=".bika_samplingrounds.SamplingRoundsView"
-      permission="senaite.core.permissions.ManageBika"
-      layer="bika.lims.interfaces.IBikaLIMS"
-    />
-
     <!-- For autocomplete dropdown -->
     <browser:page
       for="*"
@@ -301,5 +277,15 @@
       permission="zope.Public"
       layer="bika.lims.interfaces.IBikaLIMS"
     />
+
+    <!-- Dynamic Analysis Specifications -->
+    <browser:page
+      for="bika.lims.controlpanel.dynamic_analysisspecs.IDynamicAnalysisSpecs"
+      name="view"
+      class=".dynamic_analysisspecs.DynamicAnalysisSpecsView"
+      permission="senaite.core.permissions.ManageBika"
+      layer="bika.lims.interfaces.IBikaLIMS"
+    />
+
 
 </configure>

@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -46,7 +46,6 @@ from bika.lims.browser.fields import DurationField
 from bika.lims.browser.widgets import DurationWidget
 from bika.lims.browser.widgets import RecordsWidget
 from bika.lims.browser.widgets import RejectionSetupWidget
-from bika.lims.config import ARIMPORT_OPTIONS
 from bika.lims.config import ATTACHMENT_OPTIONS
 from bika.lims.config import CURRENCIES
 from bika.lims.config import WEEKDAYS
@@ -388,19 +387,6 @@ schema = BikaFolderSchema.copy() + Schema((
             format='select',
         )
     ),
-    LinesField(
-        'ARImportOption',
-        schemata="Analyses",
-        vocabulary=ARIMPORT_OPTIONS,
-        widget=MultiSelectionWidget(
-            visible=False,
-            label=_("AR Import options"),
-            description=_(
-                "'Classic' indicates importing samples per sample and "
-                "analysis service selection. With 'Profiles', analysis profile keywords "
-                "are used to select multiple analysis services together"),
-        )
-    ),
     StringField(
         'ARAttachmentOption',
         schemata="Analyses",
@@ -529,6 +515,19 @@ schema = BikaFolderSchema.copy() + Schema((
         ),
     ),
     BooleanField(
+        "AutoreceiveSamples",
+        schemata="Sampling",
+        default=False,
+        widget=BooleanWidget(
+            label=_("Auto-receive samples"),
+            description=_(
+                "Select to receive the samples automatically when created by "
+                "lab personnel and sampling workflow is disabled. Samples "
+                "created by client contacts won't be received automatically"
+            ),
+        ),
+    ),
+    BooleanField(
         'ShowPartitions',
         schemata="Appearance",
         default=False,
@@ -602,6 +601,31 @@ schema = BikaFolderSchema.copy() + Schema((
                           "via email to the Client when a Sample is rejected.")
         ),
     ),
+    TextField(
+        "EmailBodySampleRejection",
+        default_content_type='text/html',
+        default_output_type='text/x-html-safe',
+        schemata="Notifications",
+        label=_("Email body for Sample Rejection notifications"),
+        default="The sample $sample_link has been rejected because of the "
+                "following reasons:"
+                "<br/><br/>$reasons<br/><br/>"
+                "For further information, please contact us under the "
+                "following address.<br/><br/>"
+                "$lab_address",
+        widget=RichWidget(
+            label=_("Email body for Sample Rejection notifications"),
+            description=_(
+                "Set the text for the body of the email to be sent to the "
+                "Sample's client contact if the option 'Email notification on "
+                "Sample rejection' is enabled. You can use reserved keywords: "
+                "$sample_id, $sample_link, $reasons, $lab_address"),
+            default_mime_type='text/x-rst',
+            output_mime_type='text/x-html',
+            allow_file_upload=False,
+            rows=15,
+        ),
+    ),
     BooleanField(
         'NotifyOnSampleInvalidation',
         schemata="Notifications",
@@ -641,7 +665,7 @@ schema = BikaFolderSchema.copy() + Schema((
             default_mime_type='text/x-rst',
             output_mime_type='text/x-html',
             allow_file_upload=False,
-            rows=10,
+            rows=15,
         ),
     ),
     StringField(
@@ -704,11 +728,6 @@ schema = BikaFolderSchema.copy() + Schema((
         schemata="ID Server",
         default=[
             {
-                'form': 'AI-{seq:03d}',
-                'portal_type': 'ARImport',
-                'sequence_type': 'generated',
-                'split_length': 1
-            }, {
                 'form': 'B-{seq:03d}',
                 'portal_type': 'Batch',
                 'prefix': 'batch',

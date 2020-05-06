@@ -15,12 +15,23 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from datetime import timedelta
 
 from AccessControl import ClassSecurityInfo
+from Products.ATContentTypes.utils import DT2dt
+from Products.ATContentTypes.utils import dt2DT
+from Products.Archetypes.Field import BooleanField
+from Products.Archetypes.Field import FixedPointField
+from Products.Archetypes.Field import StringField
+from Products.Archetypes.Schema import Schema
+from Products.CMFCore.permissions import View
+from zope.interface import alsoProvides
+from zope.interface import implements
+from zope.interface import noLongerProvides
+
 from bika.lims import api
 from bika.lims import bikaMessageFactory as _
 from bika.lims.browser.fields import UIDReferenceField
@@ -28,21 +39,15 @@ from bika.lims.browser.widgets import DecimalWidget
 from bika.lims.catalog.indexers.baseanalysis import sortable_title
 from bika.lims.content.abstractanalysis import AbstractAnalysis
 from bika.lims.content.abstractanalysis import schema
-from bika.lims.content.analysisspec import ResultsRangeDict
+from bika.lims.content.clientawaremixin import ClientAwareMixin
 from bika.lims.content.reflexrule import doReflexRuleAction
 from bika.lims.interfaces import IAnalysis
 from bika.lims.interfaces import ICancellable
+from bika.lims.interfaces import IDynamicResultsRange
+from bika.lims.interfaces import IInternalUse
 from bika.lims.interfaces import IRoutineAnalysis
 from bika.lims.interfaces.analysis import IRequestAnalysis
 from bika.lims.workflow import getTransitionDate
-from Products.Archetypes.Field import BooleanField
-from Products.Archetypes.Field import FixedPointField
-from Products.Archetypes.Field import StringField
-from Products.Archetypes.Schema import Schema
-from Products.ATContentTypes.utils import DT2dt
-from Products.ATContentTypes.utils import dt2DT
-from Products.CMFCore.permissions import View
-from zope.interface import implements
 
 
 # True if the analysis is created by a reflex rule
@@ -124,7 +129,7 @@ schema = schema.copy() + Schema((
 ))
 
 
-class AbstractRoutineAnalysis(AbstractAnalysis):
+class AbstractRoutineAnalysis(AbstractAnalysis, ClientAwareMixin):
     implements(IAnalysis, IRequestAnalysis, IRoutineAnalysis, ICancellable)
     security = ClassSecurityInfo()
     displayContentsTab = False
@@ -166,38 +171,11 @@ class AbstractRoutineAnalysis(AbstractAnalysis):
         if request:
             return request.absolute_url_path()
 
-    @security.public
-    def getClientTitle(self):
-        """Used to populate catalog values.
-        Returns the Title of the client for this analysis' AR.
+    def getClient(self):
+        """Returns the Client this analysis is bound to, if any
         """
         request = self.getRequest()
-        if request:
-            client = request.getClient()
-            if client:
-                return client.Title()
-
-    @security.public
-    def getClientUID(self):
-        """Used to populate catalog values.
-        Returns the UID of the client for this analysis' AR.
-        """
-        request = self.getRequest()
-        if request:
-            client = request.getClient()
-            if client:
-                return client.UID()
-
-    @security.public
-    def getClientURL(self):
-        """This method is used to populate catalog values
-        Returns the URL of the client for this analysis' AR.
-        """
-        request = self.getRequest()
-        if request:
-            client = request.getClient()
-            if client:
-                return client.absolute_url_path()
+        return request and request.getClient() or None
 
     @security.public
     def getClientOrderNumber(self):
@@ -248,11 +226,11 @@ class AbstractRoutineAnalysis(AbstractAnalysis):
         return None
 
     @security.public
-    def isSampleSampled(instance):
+    def isSampleSampled(self):
         """Returns whether if the Analysis Request this analysis comes from has
         been received or not
         """
-        return instance.getDateSampled() and True or False
+        return self.getDateSampled() and True or False
 
     @security.public
     def getStartProcessDate(self):
@@ -343,26 +321,8 @@ class AbstractRoutineAnalysis(AbstractAnalysis):
             return api.get_uid(sample_type)
 
     @security.public
-    def getBatchUID(self):
-        """This method is used to populate catalog values
-        """
-        request = self.getRequest()
-        if request:
-            return request.getBatchUID()
-
-    @security.public
-    def getAnalysisRequestPrintStatus(self):
-        """This method is used to populate catalog values
-        """
-        request = self.getRequest()
-        if request:
-            return request.getPrinted()
-
-    @security.public
     def getResultsRange(self):
-        """Returns the valid result range for this routine analysis based on the
-        results ranges defined in the Analysis Request this routine analysis is
-        assigned to.
+        """Returns the valid result range for this routine analysis
 
         A routine analysis will be considered out of range if it result falls
         out of the range defined in "min" and "max". If there are values set for
@@ -372,16 +332,12 @@ class AbstractRoutineAnalysis(AbstractAnalysis):
         :return: A dictionary with keys "min", "max", "warn_min" and "warn_max"
         :rtype: dict
         """
-        specs = ResultsRangeDict()
-        analysis_request = self.getRequest()
-        if not analysis_request:
-            return specs
-
-        keyword = self.getKeyword()
-        ar_ranges = analysis_request.getResultsRange()
-        # Get the result range that corresponds to this specific analysis
-        an_range = [rr for rr in ar_ranges if rr.get('keyword', '') == keyword]
-        return an_range and an_range[0] or specs
+        results_range = self.getField("ResultsRange").get(self)
+        # dynamic results range adapter
+        adapter = IDynamicResultsRange(self, None)
+        if adapter:
+            results_range.update(adapter())
+        return results_range
 
     @security.public
     def getSiblings(self, retracted=False):
@@ -503,6 +459,16 @@ class AbstractRoutineAnalysis(AbstractAnalysis):
         """
         self.setHiddenManually(True)
         self.getField('Hidden').set(self, hidden)
+
+    @security.public
+    def setInternalUse(self, internal_use):
+        """Applies the internal use of this Analysis. Analyses set for internal
+        use are not accessible to clients and are not visible in reports
+        """
+        if internal_use:
+            alsoProvides(self, IInternalUse)
+        else:
+            noLongerProvides(self, IInternalUse)
 
     @security.public
     def setReflexAnalysisOf(self, analysis):

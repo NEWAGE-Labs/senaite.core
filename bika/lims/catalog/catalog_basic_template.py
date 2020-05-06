@@ -15,44 +15,45 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 BASE_CATALOG_INDEXES = {
     # Returns the catalog id
-    'id': 'FieldIndex',
-    'title': 'FieldIndex',
+    "id": "FieldIndex",
+    "title": "FieldIndex",
     # Return the object id
-    'getId': 'FieldIndex',
-    'portal_type': 'FieldIndex',
-    'object_provides': 'KeywordIndex',
-    'UID': 'UUIDIndex',
+    "getId": "FieldIndex",
+    "portal_type": "FieldIndex",
+    "object_provides": "KeywordIndex",
+    "UID": "UUIDIndex",
     # created returns a DataTime object
-    'created': 'DateIndex',
+    "created": "DateIndex",
     # created returns a string object with date format
-    'CreationDate': 'DateIndex',
-    'Creator': 'FieldIndex',
+    "CreationDate": "DateIndex",
+    "Creator": "FieldIndex",
     # allowedRolesAndUsers is compulsory if we are going to run
     # advancedqueries in this catalog.
-    'allowedRolesAndUsers': 'KeywordIndex',
-    'review_state': 'FieldIndex',
+    "allowedRolesAndUsers": "KeywordIndex",
+    "review_state": "FieldIndex",
     # Necessary to avoid reindexing whole catalog when we need to
     # reindex only one object. ExtendedPathIndex also could be used.
-    'path': 'PathIndex',
-    'is_active': 'BooleanIndex',
+    "path": "PathIndex",
+    "is_active": "BooleanIndex",
 }
+
 BASE_CATALOG_COLUMNS = [
-    'UID',
-    'getId',
-    'meta_type',
-    'Title',
-    'review_state',
-    'state_title',
-    'portal_type',
+    "UID",
+    "getId",
+    "meta_type",
+    "Title",
+    "review_state",
+    "state_title",
+    "portal_type",
     # allowedRolesAndUsers is compulsory if we are going to run
     # advancedqueries in this catalog.
-    'allowedRolesAndUsers',
-    'created',
-    'Creator',
-    'getObjectWorkflowStates',
+    "allowedRolesAndUsers",
+    "created",
+    "Creator",
+    "getObjectWorkflowStates",
 ]

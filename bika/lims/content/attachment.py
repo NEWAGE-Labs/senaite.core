@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -27,6 +27,7 @@ from bika.lims.browser.widgets import DateTimeWidget
 from bika.lims.config import ATTACHMENT_REPORT_OPTIONS
 from bika.lims.config import PROJECTNAME
 from bika.lims.content.bikaschema import BikaSchema
+from bika.lims.content.clientawaremixin import ClientAwareMixin
 from bika.lims.interfaces.analysis import IRequestAnalysis
 from DateTime import DateTime
 from plone.app.blob.field import FileField
@@ -96,7 +97,7 @@ schema["id"].required = False
 schema["title"].required = False
 
 
-class Attachment(BaseFolder):
+class Attachment(BaseFolder, ClientAwareMixin):
     """Attachments are stored per client and can be linked to ARs or Analyses
     """
     security = ClassSecurityInfo()
@@ -135,15 +136,6 @@ class Attachment(BaseFolder):
         if not attachment_type:
             return ""
         return api.get_uid(attachment_type)
-
-    @security.public
-    def getClientUID(self):
-        """Return the UID of the client
-        """
-        client = api.get_parent(self)
-        if not client:
-            return ""
-        return api.get_uid(client)
 
     @security.public
     def getLinkedRequests(self):

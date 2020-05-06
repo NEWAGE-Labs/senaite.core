@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -266,11 +266,10 @@ class ReferenceResultsView(BikaListingView):
         self.show_search = False
 
         # Categories
+        self.categories = []
         if self.show_categories_enabled():
-            self.categories = []
             self.show_categories = True
             self.expand_all_categories = True
-            self.category_index = "getCategoryTitle"
 
         self.columns = collections.OrderedDict((
             ("Title", {
@@ -348,6 +347,7 @@ class ReferenceResultsView(BikaListingView):
         item["result"] = ref_result.get("result")
         item["min"] = ref_result.get("min")
         item["max"] = ref_result.get("max")
+        item["error"] = ref_result.get("error")
 
         # Icons
         after_icons = ""

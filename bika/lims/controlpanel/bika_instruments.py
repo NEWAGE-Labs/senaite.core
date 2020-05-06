@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -72,7 +72,7 @@ class InstrumentsView(BikaListingView):
                 "index": "sortable_title"}),
             ("Type", {
                 "title": _("Type"),
-                "index": "getInstrumentTypeName",
+                "index": "instrumenttype_title",
                 "toggle": True,
                 "sortable": True}),
             ("Brand", {
@@ -81,7 +81,6 @@ class InstrumentsView(BikaListingView):
                 "toggle": True}),
             ("Model", {
                 "title": _("Model"),
-                "index": "getModel",
                 "toggle": True}),
             ("ExpiryDate", {
                 "title": _("Expiry Date"),

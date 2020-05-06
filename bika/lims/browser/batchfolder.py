@@ -15,17 +15,19 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
 
 from bika.lims import api
-from bika.lims.api.security import check_permission
 from bika.lims import bikaMessageFactory as _
+from bika.lims.api.security import check_permission
 from bika.lims.browser.bika_listing import BikaListingView
+from bika.lims.interfaces import IClient
 from bika.lims.permissions import AddBatch
 from bika.lims.utils import get_link
+from bika.lims.utils import get_progress_bar_html
 
 
 class BatchFolderContentsView(BikaListingView):
@@ -40,7 +42,7 @@ class BatchFolderContentsView(BikaListingView):
             "portal_type": "Batch",
             "sort_on": "created",
             "sort_order": "descending",
-            "is_active": True
+            "is_active": True,
         }
 
         self.context_actions = {}
@@ -58,6 +60,11 @@ class BatchFolderContentsView(BikaListingView):
             ("Title", {
                 "title": _("Title"),
                 "index": "title", }),
+            ("Progress", {
+                "title": _("Progress"),
+                "index": "getProgress",
+                "sortable": True,
+                "toggle": True}),
             ("BatchID", {
                 "title": _("Batch ID"),
                 "index": "getId", }),
@@ -111,34 +118,37 @@ class BatchFolderContentsView(BikaListingView):
             },
         ]
 
-    def before_render(self):
+    def update(self):
         """Before template render hook
         """
-        super(BatchFolderContentsView, self).before_render()
+        super(BatchFolderContentsView, self).update()
 
         if self.context.portal_type == "BatchFolder":
             self.request.set("disable_border", 1)
 
-    def update(self):
-        """Called before the listing renders
-        """
-        super(BatchFolderContentsView, self).update()
-
-        if self.on_batch_folder() and self.can_add_batches():
-            self.context_actions[_("Add")] = {
+        # By default, only users with AddBatch permissions for the current
+        # context can add batches.
+        self.context_actions = {
+            _("Add"): {
                 "url": "createObject?type_name=Batch",
-                "permission": "Add portal content",
-                "icon": "++resource++bika.lims.images/add.png"}
+                "permission": AddBatch,
+                "icon": "++resource++bika.lims.images/add.png"
+            }
+        }
 
-    def on_batch_folder(self):
-        """Checks if the current context is a Batch folder
-        """
-        return self.context.portal_type == "BatchFolder"
-
-    def can_add_batches(self):
-        """Checks if the current user is allowed to add batches
-        """
-        return check_permission(AddBatch, self.context)
+        # If current user is a client contact and current context is not a
+        # Client, then modify the url for Add action so the Batch gets created
+        # inside the Client object to which the current user belongs. The
+        # reason is that Client contacts do not have privileges to create
+        # Batches inside portal/batches
+        if not IClient.providedBy(self.context):
+            # Get the client the current user belongs to
+            client = api.get_current_client()
+            if client and check_permission(AddBatch, client):
+                add_url = self.context_actions[_("Add")]["url"]
+                add_url = "{}/{}".format(api.get_url(client), add_url)
+                self.context_actions[_("Add")]["url"] = add_url
+                del(self.context_actions[_("Add")]["permission"])
 
     def folderitem(self, obj, item, index):
         """Applies new properties to the item (Batch) that is currently being
@@ -162,6 +172,11 @@ class BatchFolderContentsView(BikaListingView):
         client = obj.getClient()
         created = api.get_creation_date(obj)
         date = obj.getBatchDate()
+
+        # total sample progress
+        progress = obj.getProgress()
+        item["Progress"] = progress
+        item["replace"]["Progress"] = get_progress_bar_html(progress)
 
         item["BatchID"] = bid
         item["ClientBatchID"] = cbid

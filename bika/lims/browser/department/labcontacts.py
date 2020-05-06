@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims import bikaMessageFactory as _
@@ -41,12 +41,12 @@ class LabContactsView(LabContactsView):
         self.context_actions = {}
         self.contentFilter = {
             'portal_type': 'LabContact',
-            'sort_on': 'getFirstname',
+            'sort_on': 'sortable_title',
             'sort_order': 'ascending'
         }
         self.columns = {
             'Fullname': {'title': _('Name'),
-                         'index': 'getFullname'},
+                         'index': 'sortable_title'},
             'Department': {'title': _('Department')},
             'BusinessPhone': {'title': _('Phone')},
             'MobilePhone': {'title': _('Mobile Phone')},

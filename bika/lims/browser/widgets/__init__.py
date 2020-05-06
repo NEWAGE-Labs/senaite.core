@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from .datetimewidget import DateTimeWidget
@@ -33,7 +33,6 @@ from .coordinatewidget import CoordinateWidget
 from .analysisprofileanalyseswidget import AnalysisProfileAnalysesWidget
 from .artemplateanalyseswidget import ARTemplateAnalysesWidget
 from .artemplatepartitionswidget import ARTemplatePartitionsWidget
-from .srtemplateartemplateswidget import SRTemplateARTemplatesWidget
 from .addresswidget import AddressWidget
 from .scheduleinputwidget import ScheduleInputWidget
 from .integer import IntegerWidget

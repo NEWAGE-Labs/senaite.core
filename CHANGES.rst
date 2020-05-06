@@ -1,11 +1,140 @@
 Changelog
 =========
 
-1.3.2 (unreleased)
+1.3.4 (unreleased)
 ------------------
 
 **Added**
 
+- #1573 Append the type name of the current record in breadcrumbs (Client)
+- #1573 Add link "My Organization" under top-right user selection list
+
+**Changed**
+
+- #1573 Do not display top-level "Clients" folder to non-lab users
+
+**Fixed**
+
+- #1575 Fix Uncertainties are displayed although result is below Detection Limit
+- #1572 Fix Unable to get the previous status when duplicated in review history
+- #1570 Fix Date time picker does not translates well to current language
+- #1571 Fix Cannot reject Sample when contact has no email set
+- #1568 Fix Traceback when rendering sticker `Code_39_2ix1i`
+- #1567 Fix missing CCContact after adding a new Sample
+- #1566 Fix column sorting in Worksheet listing
+- #1563 Fix Client Contacts can create Samples without Contact
+
+
+1.3.3.1 (2020-03-04)
+--------------------
+
+**Fixed**
+
+- #1560 Fix missing Add Dynamic Analysis Specifications Button for Lab Managers
+
+
+1.3.3 (2020-03-03)
+------------------
+
+**Added**
+
+- #1553 Allow to modify the email template for rejection notification
+- #1549 Added registry profile for jQuery UI settings
+- #1544 Progress indicator for Batch listing
+- #1536 Integrated Setup and Profiles from senaite.lims
+- #1534 Integrate browser resources from senaite.lims
+- #1529 Moved contentmenu provider into core
+- #1523 Moved Installation Screens into core
+- #1520 JavaScripts/CSS Integration and Cleanup
+- #1517 Integrate senaite.core.spotlight
+- #1516 Consider analyses with result options or string in duplicate valid range
+- #1515 Moved Setup View into Core
+- #1506 Specification non-compliant viewlet in Sample
+- #1506 Sample results ranges out-of-date viewlet in Sample
+- #1506 Warn icon in analyses when range is not compliant with Specification
+- #1492 Dynamic Analysis Specifications
+- #1507 Support for semi-colon character separator in CCEmails field
+- #1499 Moved navigation portlet into core 
+- #1498 Moved all viewlets from senaite.lims to senaite.core
+- #1505 Display partition link in analyses listing
+- #1491 Enable Audit-logging for Dexterity Contents
+- #1489 Support Multiple Catalogs for Dexterity Contents
+- #1481 Filter Templates field when Sample Type is selected in Sample Add form
+- #1483 Added Accredited symbol in Analyses listings
+- #1466 Support for "readonly" and "hidden" visibility modes in ReferenceWidget
+
+**Changed**
+
+- #1555 List all multi-reports for samples, where the current sample is contained
+- #1543 Sort navigation child-nodes alphabetically
+- #1539 Avoid unnecessary Price recalculations in Sample Add Form
+- #1532 Updated jQuery Barcode to version 2.2.0
+- #1513 Better Ajax Loader for Sample Add Form
+- #1508 Do not try to render InstrumentQCFailuresViewlet to non-lab personnel
+- #1495 Better Remarks handling and display
+- #1502 Improved DateTime Widget
+- #1490 Support Dexterity Behavior Fields in API
+- #1488 Support Dexterity Contents in Catalog Indexers
+- #1486 Clean-up of indexes and metadata from `setup_catalog`
+
+**Removed**
+
+- #1531 Remove sampling rounds from core
+- #1551 Removed dependency to plone.app.iterate
+- #1530 Removed ARImport
+- #1530 Removed stale type registrations
+- #1541 Remove add/edit options of ReferenceWidget
+- #1535 Remove `zcatalog` monkey (and `getRequestUID` index)
+- #1518 Removed stale indexes from `analysis_catalog`
+- #1516 Removed getResultsRange metadata from analysis_catalog
+- #1487 Dexterity Compatible Catalog Base Class
+- #1482 Remove `senaite.instruments` dependency for instrument import form
+- #1478 Remove AcquireFieldDefaults (was used for CCEmails field only)
+
+**Fixed**
+
+- #1556 Fix TypeError when retracting analyses with ExtendedField
+- #1552 Rejection on registration is neither generating rejection pdf nor email
+- #1550 Fix Uncaught TypeError in combogrid
+- #1542 Fix sporadical errors when contacts do not have a valid email address
+- #1540 Fix flushing CCEmail fields in Sample Add Form
+- #1533 Fix traceback from log when rendering stickers preview
+- #1525 Fix error when creating partitions with analyst user
+- #1522 Fix sporadical timeout issue when adding new samples/remarks
+- #1506 Changes via manage results don't get applied to partitions
+- #1506 Fix recursion error when getting dependencies through Calculation
+- #1506 setter from ARAnalysisField does no longer return values
+- #1512 QC Analyses listing appears empty in Sample view
+- #1510 Error when viewing a Sample w/o Batch as client contact
+- #1511 Links to partitions for Internal Use are displayed in partitions viewlet
+- #1505 Manage Analyses Form re-applies partitioned Analyses back to the Root
+- #1503 Avoid duplicate CSS IDs in multi-column Add form
+- #1501 Fix Attribute Error in Reference Sample Popup
+- #1493 jsonapi.read omits `include_methods` when a single parameter is used
+- #1494 Fix KeyError in Sample Type Listing
+- #1477 Sample edit form - some selection widgets empty
+- #1478 Clients default CC E-Mails missing in Add Sample
+- #1479 Fixed too many redirects error: Labclerks viewing verified worksheets
+- #1480 Worksheet removal results in 404
+- #1475 User with "Analyst" role cannot submit analyses from worksheet
+- #1474 Adding Control Reference to Worksheet causes print fail
+- #1473 Hidden settings of analysis services lost on Sample creation
+- #1472 Secondary samples - removal of analysis profile not possible
+- #1469 Fix Site Properties Generic Setup Export Step
+- #1467 Cannot override behavior of Batch folder when using `before_render`
+
+
+1.3.2 (2019-10-30)
+------------------
+
+**Added**
+
+- #1463 Structure Export/Import Handlers for Generic Setup
+- #1462 Allow to extend the behavior of fields from AddSample view with adapters
+- #1455 Added support for adapters in guard handler
+- #1436 Setting in setup for auto-reception of samples upon creation
+- #1433 Added Submitter column in Sample's analyses listing
+- #1441 Added Auto ID Behavior for Dexterity Contents
 - #1422 Notify user with failing addresses when emailing of results reports
 - #1420 Allow to detach a partition from its primary sample
 - #1410 Email API
@@ -13,6 +142,10 @@ Changelog
 
 **Changed**
 
+- #1451 Render Analysis Remarks in Listings as HTML
+- #1445 Allow formatted HTML in the other rejection reasons
+- #1428 Publish verified partitions
+- #1429 Add2: Do not set template values on already filled fields
 - #1427 Improved performance of Sample header table rendering
 - #1417 Cache allowed transitions for analyses on the request
 - #1413 Improved Email Publication
@@ -20,9 +153,24 @@ Changelog
 
 **Removed**
 
+- #1449 Removed InheritedObjects (Inherited from) field from Batch
+- #1430 Removed Identifier Types
+
 
 **Fixed**
 
+- #1462 Autofill Client Contact in Sample Add form when current user is a client
+- #1461 Allow unassign transition for cancelled/rejected/retracted analyses
+- #1449 sort_limit was not considered in ReferenceWidget searches
+- #1449 Fix Clients were unable to add batches
+- #1453 Fix initial IDs not starting with 1
+- #1454 Fix occasional error when labeling samples w/o report as printed
+- #1452 Fix missing error percentage calculation for reference samples
+- #1447 New Client contact has access to last client's Sample only
+- #1446 Parameter `group` in `contact._addUserToGroup` was not considered
+- #1444 Fixed Worksheet autofill of wide Iterims
+- #1443 Fix non-saving checkbox values for manual Interims in Analysis Services
+- #1439 Fix global Auditlog when Analyses/Attachments were removed
 - #1426 Render HTML Texts in Info Popups correctly
 - #1423 Use the value set for ui_item property when displaying ReferenceWidget
 - #1425 Fix adapter priority for widget visibility
@@ -30,9 +178,6 @@ Changelog
 - #1418 Subscriber adapters not supported in clients listing
 - #1419 Mixed permissions for transitions in client workflow
 - #1414 Occasional "OSError: [Errno 24] Too many open files" in frontpage
-
-
-**Security**
 
 
 1.3.1 (2019-07-01)

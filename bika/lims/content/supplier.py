@@ -15,31 +15,32 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
+from Products.Archetypes.public import ManagedSchema
+from Products.Archetypes.public import StringField
+from Products.Archetypes.public import StringWidget
+from Products.Archetypes.public import TextAreaWidget
+from Products.Archetypes.public import TextField
+from Products.Archetypes.public import registerType
+from zope.interface import implements
+
 from bika.lims import bikaMessageFactory as _
-from bika.lims.browser.fields.remarksfield import RemarksField
-from bika.lims.browser.widgets import RemarksWidget
 from bika.lims.config import PROJECTNAME
 from bika.lims.content.organisation import Organisation
-from bika.lims.interfaces import ISupplier, IDeactivable
-from zope.interface import implements
-from Products.Archetypes.public import registerType
-from Products.Archetypes.public import StringField
-from Products.Archetypes.public import ManagedSchema
-from Products.Archetypes.public import StringWidget
-
+from bika.lims.interfaces import IDeactivable
+from bika.lims.interfaces import ISupplier
 
 schema = Organisation.schema.copy() + ManagedSchema((
 
-    RemarksField(
+    TextField(
         "Remarks",
-        searchable=True,
-        widget=RemarksWidget(
+        allowable_content_types=("text/plain",),
+        widget=TextAreaWidget(
             label=_("Remarks"),
-        ),
+        )
     ),
 
     StringField(

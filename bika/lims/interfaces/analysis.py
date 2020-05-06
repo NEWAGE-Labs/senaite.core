@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from zope.interface import Interface
@@ -59,16 +59,16 @@ class IRequestAnalysis(Interface):
         :rtype: IClient"""
 
     def getClientID(self):
-        """Returns the UID of the Client assigned to the Analysis Request this
-        analysis belongs to. Returns None if there is no Request nor a Client
+        """Returns the ID of the Client assigned to the Analysis Request this
+        analysis belongs to. Returns empty if there is no Request nor a Client
         assigned to this analysis
-        :return: the UID of the Client
+        :return: the ID of the Client
         :rtype: str
         """
 
     def getClientUID(self):
         """Returns the UID of the Client assigned to the Analysis Request this
-        analysis belongs to. Returns None if there is no Request nor a Client
+        analysis belongs to. Returns empty if there is no Request nor a Client
         assigned to this analysis
         :return: the UID of the Client
         :rtype: str
@@ -76,7 +76,7 @@ class IRequestAnalysis(Interface):
 
     def getClientTitle(self):
         """Returns the name of the Client assigned to the Analysis Request this
-        analysis belongs to. Returns None if there is no Request nor a Client
+        analysis belongs to. Returns empty if there is no Request nor a Client
         assigned to this analysis
         :return: the name of the Client
         :rtype: str
@@ -84,7 +84,7 @@ class IRequestAnalysis(Interface):
 
     def getClientURL(self):
         """Returns the absolute url path of the Client assigned to the Analysis
-        Request this analysis belongs to. Returns None if there is no Request
+        Request this analysis belongs to. Returns empty if there is no Request
         nor a Client assigned to this analysis
         :return: the url path of the Client
         :type: str

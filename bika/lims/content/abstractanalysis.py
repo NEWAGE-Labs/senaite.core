@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import cgi
@@ -40,6 +40,7 @@ from bika.lims import workflow as wf
 from bika.lims.browser.fields import HistoryAwareReferenceField
 from bika.lims.browser.fields import InterimFieldsField
 from bika.lims.browser.fields import UIDReferenceField
+from bika.lims.browser.fields import ResultRangeField
 from bika.lims.browser.fields.uidreferencefield import get_backreferences
 from bika.lims.browser.widgets import RecordsWidget
 from bika.lims.config import LDL
@@ -148,6 +149,12 @@ InterimFields = InterimFieldsField(
     )
 )
 
+# Results Range that applies to this analysis
+ResultsRange = ResultRangeField(
+    "ResultsRange",
+    required=0
+)
+
 schema = schema.copy() + Schema((
     AnalysisService,
     Analyst,
@@ -160,7 +167,8 @@ schema = schema.copy() + Schema((
     RetestOf,
     Uncertainty,
     Calculation,
-    InterimFields
+    InterimFields,
+    ResultsRange,
 ))
 
 
@@ -483,10 +491,6 @@ class AbstractAnalysis(AbstractBaseAnalysis):
 
         # Set the result field
         self.getField("Result").set(self, val)
-
-    @security.public
-    def getResultsRange(self):
-        raise NotImplementedError("getResultsRange is not implemented.")
 
     @security.public
     def calculateResult(self, override=False, cascade=False):
@@ -984,7 +988,7 @@ class AbstractAnalysis(AbstractBaseAnalysis):
     def getAnalyst(self):
         """Returns the stored Analyst or the user who submitted the result
         """
-        analyst = self.getField("Analyst").get(self)
+        analyst = self.getField("Analyst").get(self) or self.getAssignedAnalyst()
         if not analyst:
             analyst = self.getSubmittedBy()
         return analyst or ""
@@ -1141,14 +1145,6 @@ class AbstractAnalysis(AbstractBaseAnalysis):
         attachments = self.getAttachment()
         uids = [att.UID() for att in attachments]
         return uids
-
-    @security.public
-    def getCalculationTitle(self):
-        """Used to populate catalog values
-        """
-        calculation = self.getCalculation()
-        if calculation:
-            return calculation.Title()
 
     @security.public
     def getCalculationUID(self):

@@ -232,12 +232,6 @@
       <role name="Manager"/>
       <role name="Owner"/>
     </permission>
-    <permission name="senaite.core: Add IdentifierType" acquire="False">
-      <role name="LabClerk"/>
-      <role name="LabManager"/>
-      <role name="Manager"/>
-      <role name="Owner"/>
-    </permission>
     <permission name="senaite.core: Add Instrument" acquire="False">
       <role name="LabClerk"/>
       <role name="LabManager"/>
@@ -334,20 +328,6 @@
       <role name="LabClerk"/>
       <role name="LabManager"/>
       <role name="Manager"/>
-      <role name="Owner"/>
-    </permission>
-    <permission name="senaite.core: Add SamplingRound" acquire="False">
-      <role name="LabClerk"/>
-      <role name="LabManager"/>
-      <role name="Manager"/>
-      <role name="SamplingCoordinator"/>
-      <role name="Owner"/>
-    </permission>
-    <permission name="senaite.core: Add SRTemplate" acquire="False">
-      <role name="LabClerk"/>
-      <role name="LabManager"/>
-      <role name="Manager"/>
-      <role name="SamplingCoordinator"/>
       <role name="Owner"/>
     </permission>
     <permission name="senaite.core: Add StorageLocation" acquire="False">
@@ -511,22 +491,6 @@
       <role name="LabClerk"/>
       <role name="LabManager"/>
       <role name="Manager"/>
-    </permission>
-
-    <!-- Transition permissions (Sampling Round) -->
-    <permission name="senaite.core: Transition: Close Sampling Round" acquire="False">
-      <role name="LabClerk"/>
-      <role name="LabManager"/>
-      <role name="Manager"/>
-      <role name="Owner"/>
-      <role name="SamplingCoordinator"/>
-    </permission>
-    <permission name="senaite.core: Transition: Reopen Sampling Round" acquire="False">
-      <role name="LabClerk"/>
-      <role name="LabManager"/>
-      <role name="Manager"/>
-      <role name="Owner"/>
-      <role name="SamplingCoordinator"/>
     </permission>
 
     <!-- Transition permissions (Worksheet) -->
@@ -712,11 +676,6 @@
       <role name="Manager"/>
       <role name="Client"/>
     </permission>
-    <permission name="senaite.core: Field: Edit Sampling Round" acquire="False">
-      <role name="LabClerk"/>
-      <role name="LabManager"/>
-      <role name="Manager"/>
-    </permission>
     <permission name="senaite.core: Field: Edit Specification" acquire="False">
       <role name="LabClerk"/>
       <role name="LabManager"/>
@@ -833,11 +792,6 @@
     <permission name="senaite.core: Manage Analysis Requests" acquire="False">
       <role name="Analyst"/>
       <role name="LabClerk"/>
-      <role name="LabManager"/>
-      <role name="Manager"/>
-      <role name="Owner"/>
-    </permission>
-    <permission name="senaite.core: Manage ARImport" acquire="False">
       <role name="LabManager"/>
       <role name="Manager"/>
       <role name="Owner"/>

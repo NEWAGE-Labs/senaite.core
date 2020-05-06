@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import datetime
@@ -516,7 +516,7 @@ class Lab_Products(WorksheetImporter):
         folder = self.context.bika_setup.bika_labproducts
         # Iterate through the rows
         for row in self.get_rows(3):
-            # Create the SRTemplate object
+            # Create the LabProduct object
             obj = _createObjectByType('LabProduct', folder, tmpID())
             # Apply the row values
             obj.edit(
@@ -1155,7 +1155,7 @@ class Sample_Types(WorksheetImporter):
             samplepoint = self.get_object(bsc, 'SamplePoint',
                                           row.get('SamplePoint_title'))
             if samplepoint:
-                obj.setSamplePoints([samplepoint, ])
+                samplepoint.setSampleType([obj, ])
             obj.unmarkCreationFlag()
             renameAfterCreation(obj)
             notify(ObjectInitializedEvent(obj))
@@ -1219,11 +1219,6 @@ class Sample_Point_Sample_Types(WorksheetImporter):
                     sampletypes.append(sampletype)
                     samplepoint.setSampleTypes(sampletypes)
 
-            if sampletype:
-                samplepoints = sampletype.getSamplePoints()
-                if samplepoint not in samplepoints:
-                    samplepoints.append(samplepoint)
-                    sampletype.setSamplePoints(samplepoints)
 
 class Storage_Locations(WorksheetImporter):
 
@@ -1718,7 +1713,6 @@ class Analysis_Specifications(WorksheetImporter):
                 "keyword": service.getKeyword(),
                 "min": row["min"] if row["min"] else "0",
                 "max": row["max"] if row["max"] else "0",
-                "error": row["error"] if row["error"] else "0"
             })
         # write objects.
         for parent in bucket.keys():
