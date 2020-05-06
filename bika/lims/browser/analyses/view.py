@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import json
@@ -25,15 +25,11 @@ from copy import copy
 from DateTime import DateTime
 from Products.Archetypes.config import REFERENCE_CATALOG
 from Products.CMFPlone.utils import safe_unicode
-from plone.memoize import view as viewcache
-from zope.component import getAdapters
-
 from bika.lims import api
 from bika.lims import bikaMessageFactory as _
 from bika.lims import logger
 from bika.lims.api.analysis import get_formatted_interval
 from bika.lims.api.analysis import is_out_of_range
-from bika.lims.api.analysis import is_result_range_compliant
 from bika.lims.browser.bika_listing import BikaListingView
 from bika.lims.catalog import CATALOG_ANALYSIS_LISTING
 from bika.lims.config import LDL
@@ -55,6 +51,8 @@ from bika.lims.utils import get_image
 from bika.lims.utils import get_link
 from bika.lims.utils import t
 from bika.lims.utils.analysis import format_uncertainty
+from plone.memoize import view as viewcache
+from zope.component import getAdapters
 
 
 class AnalysesView(BikaListingView):
@@ -161,9 +159,6 @@ class AnalysesView(BikaListingView):
                 "title": _("Captured"),
                 "index": "getResultCaptureDate",
                 "sortable": False}),
-            ("SubmittedBy", {
-                "title": _("Submitter"),
-                "sortable": False}),
             ("DueDate", {
                 "title": _("Due Date"),
                 "index": "getDueDate",
@@ -238,16 +233,6 @@ class AnalysesView(BikaListingView):
         """
         super(AnalysesView, self).before_render()
         self.request.set("disable_plone.rightcolumn", 1)
-
-    @property
-    @viewcache.memoize
-    def show_partitions(self):
-        """Returns whether the partitions must be displayed or not
-        """
-        if api.get_current_client():
-            # Current user is a client contact
-            return api.get_setup().getShowPartitions()
-        return True
 
     @viewcache.memoize
     def analysis_remarks_enabled(self):
@@ -565,8 +550,6 @@ class AnalysesView(BikaListingView):
         self._folder_item_instrument(obj, item)
         # Fill analyst
         self._folder_item_analyst(obj, item)
-        # Fill submitted by
-        self._folder_item_submitted_by(obj, item)
         # Fill attachments
         self._folder_item_attachments(obj, item)
         # Fill uncertainty
@@ -575,18 +558,12 @@ class AnalysesView(BikaListingView):
         self._folder_item_detection_limits(obj, item)
         # Fill Specifications
         self._folder_item_specifications(obj, item)
-        self._folder_item_out_of_range(obj, item)
-        self._folder_item_result_range_compliance(obj, item)
-        # Fill Partition
-        self._folder_item_partition(obj, item)
         # Fill Due Date and icon if late/overdue
         self._folder_item_duedate(obj, item)
         # Fill verification criteria
         self._folder_item_verify_icons(obj, item)
         # Fill worksheet anchor/icon
         self._folder_item_assigned_worksheet(obj, item)
-        # Fill accredited icon
-        self._folder_item_accredited_icon(obj, item)
         # Fill reflex analysis icons
         self._folder_item_reflex_icons(obj, item)
         # Fill hidden field (report visibility)
@@ -910,17 +887,6 @@ class AnalysesView(BikaListingView):
         item['Analyst'] = obj.getAnalyst or api.get_current_user().id
         item['choices']['Analyst'] = self.get_analysts()
 
-    def _folder_item_submitted_by(self, obj, item):
-        submitted_by = obj.getSubmittedBy
-        if submitted_by:
-            user = self.get_user_by_id(submitted_by)
-            user_name = user and user.getProperty("fullname") or submitted_by
-            item['SubmittedBy'] = user_name
-
-    @viewcache.memoize
-    def get_user_by_id(self, user_id):
-        return api.get_user(user_id)
-
     def _folder_item_attachments(self, obj, item):
         item['Attachments'] = ''
         attachment_uids = obj.getAttachmentUIDs
@@ -986,8 +952,8 @@ class AnalysesView(BikaListingView):
                                        sciformat=int(self.scinot))
         if formatted:
             item["Uncertainty"] = formatted
-            item["before"]["Uncertainty"] = "± "
-            item["after"]["Uncertainty"] = obj.getUnit()
+        else:
+            item["Uncertainty"] = obj.getUncertainty(result)
 
         if self.is_uncertainty_edition_allowed(analysis_brain):
             item["allow_edit"].append("Uncertainty")
@@ -1027,45 +993,24 @@ class AnalysesView(BikaListingView):
 
     def _folder_item_specifications(self, analysis_brain, item):
         """Set the results range to the item passed in"""
-        analysis = self.get_object(analysis_brain)
-        results_range = analysis.getResultsRange()
-
-        item["Specification"] = ""
-        if results_range:
-            item["Specification"] = get_formatted_interval(results_range, "")
-
-    def _folder_item_out_of_range(self, analysis_brain, item):
-        """Displays an icon if result is out of range
-        """
-        analysis = self.get_object(analysis_brain)
-        out_range, out_shoulders = is_out_of_range(analysis)
-        if out_range:
-            msg = _("Result out of range")
-            img = get_image("exclamation.png", title=msg)
-            if not out_shoulders:
-                msg = _("Result in shoulder range")
-                img = get_image("warning.png", title=msg)
-            self._append_html_element(item, "Result", img)
-
-    def _folder_item_result_range_compliance(self, analysis_brain, item):
-        """Displays an icon if the range is different from the results ranges
-        defined in the Sample
-        """
-        if not IAnalysisRequest.providedBy(self.context):
+        # Everyone can see valid-ranges
+        item['Specification'] = ''
+        results_range = analysis_brain.getResultsRange
+        if not results_range:
             return
 
-        analysis = self.get_object(analysis_brain)
-        if is_result_range_compliant(analysis):
-            return
+        # Display the specification interval
+        item["Specification"] = get_formatted_interval(results_range, "")
 
-        # Non-compliant range, display an icon
-        service_uid = analysis_brain.getServiceUID
-        original = self.context.getResultsRange(search_by=service_uid)
-        original = get_formatted_interval(original, "")
-        msg = _("Result range is different from Specification: {}"
-                .format(original))
-        img = get_image("warning.png", title=msg)
-        self._append_html_element(item, "Specification", img)
+        # Show an icon if out of range
+        out_range, out_shoulders = is_out_of_range(analysis_brain)
+        if not out_range:
+            return
+        # At least is out of range
+        img = get_image("exclamation.png", title=_("Result out of range"))
+        if not out_shoulders:
+            img = get_image("warning.png", title=_("Result in shoulder range"))
+        self._append_html_element(item, "Result", img)
 
     def _folder_item_verify_icons(self, analysis_brain, item):
         """Set the analysis' verification icons to the item passed in.
@@ -1202,32 +1147,6 @@ class AnalysesView(BikaListingView):
                         title=t(_('It comes form a reflex rule')))
         self._append_html_element(item, 'Service', img)
 
-    def _folder_item_accredited_icon(self, analysis_brain, item):
-        """Adds an icon to the item dictionary if it is an accredited analysis
-        """
-        full_obj = self.get_object(analysis_brain)
-        if full_obj.getAccredited():
-            img = get_image("accredited.png", title=t(_("Accredited")))
-            self._append_html_element(item, "Service", img)
-
-    def _folder_item_partition(self, analysis_brain, item):
-        """Adds an anchor to the partition if the current analysis is from a
-        partition that does not match with the current context
-        """
-        if not IAnalysisRequest.providedBy(self.context):
-            return
-
-        sample_id = analysis_brain.getRequestID
-        if sample_id != api.get_id(self.context):
-            if not self.show_partitions:
-                # Do not display the link
-                return
-
-            part_url = analysis_brain.getRequestURL
-            url = get_link(part_url, value=sample_id, **{"class": "small"})
-            title = item["replace"].get("Service") or item["Service"]
-            item["replace"]["Service"] = "{}<br/>{}".format(title, url)
-
     def _folder_item_report_visibility(self, analysis_brain, item):
         """Set if the hidden field can be edited (enabled/disabled)
 
@@ -1282,10 +1201,6 @@ class AnalysesView(BikaListingView):
 
         if self.is_analysis_edition_allowed(analysis_brain):
             item["allow_edit"].extend(["Remarks"])
-        else:
-            # render HTMLified text in readonly mode
-            item["Remarks"] = api.text_to_html(
-                analysis_brain.getRemarks, wrap=None)
 
     def _append_html_element(self, item, element, html, glue="&nbsp;",
                              after=True):

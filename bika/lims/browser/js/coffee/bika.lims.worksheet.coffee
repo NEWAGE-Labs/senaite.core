@@ -100,6 +100,195 @@ class window.WorksheetFolderView
       bika.lims.SiteView.notify_in_panel message, "error"
 
 
+
+class window.WorksheetAddAnalysesView
+  ###
+   * Controller class for Worksheet's add analyses view
+  ###
+
+  load: =>
+    console.debug "WorksheetAddanalysesview::load"
+
+    # bind the event handler to the elements
+    @bind_eventhandler()
+
+
+  ### INITIALIZERS ###
+
+  bind_eventhandler: =>
+    ###
+     * Binds callbacks on elements
+     *
+     * N.B. We attach all the events to the form and refine the selector to
+     * delegate the event: https://learn.jquery.com/events/event-delegation/
+     *
+    ###
+    console.debug "WorksheetAddanalysesview::bind_eventhandler"
+
+    # Category filter changed
+    $("body").on "change", "[name='list_FilterByCategory']", @on_category_change
+
+    # Search button clicked
+    $("body").on "click", ".ws-analyses-search-button", @on_search_click
+
+
+  ### METHODS ###
+
+  ajax_submit: (options={}) =>
+    ###
+     * Ajax Submit with automatic event triggering and some sane defaults
+    ###
+    console.debug "°°° ajax_submit °°°"
+
+    # some sane option defaults
+    options.type ?= "POST"
+    options.url ?= @get_base_url()
+    options.context ?= this
+
+    console.debug ">>> ajax_submit::options=", options
+
+    $(this).trigger "ajax:submit:start"
+    done = =>
+        $(this).trigger "ajax:submit:end"
+    return $.ajax(options).done done
+
+
+  get_base_url: =>
+    ###
+     * Return the current base url
+    ###
+    url = window.location.href
+    return url.split('?')[0]
+
+
+  get_authenticator: =>
+    ###
+     * Get the authenticator value
+    ###
+    return $("input[name='_authenticator']").val()
+
+
+  get_listing_form_id: () =>
+    ###
+     * Returns the CSS ID of the analyses listing
+    ###
+    return "list"
+
+
+  get_listing_form: () =>
+    ###
+     * Returns the analyses listing form element
+    ###
+    form_id = @get_listing_form_id()
+    return $("form[id='#{form_id}']")
+
+
+  filter_service_selector_by_category_uid: (category_uid) =>
+    ###
+     * Filters the service selector by category
+    ###
+    console.debug "WorksheetAddanalysesview::filter_service_selector_by_category_uid:#{category_uid}"
+
+    form_id = @get_listing_form_id()
+    select_name = "#{form_id}_FilterByService"
+    $select = $("[name='#{select_name}']")
+
+    base_url = @get_base_url()
+    url = base_url.replace "/add_analyses", "/getServices"
+
+    data =
+      _authenticator: @get_authenticator()
+
+    if category_uid isnt "any"
+      data["getCategoryUID"] = category_uid
+
+    @ajax_submit
+      url: url
+      data: data
+      dataType: "json"
+    .done (data) ->
+      $select.empty()
+      any_option = "<option value='any'>#{_('Any')}</option>"
+      $select.append any_option
+      $.each data, (index, item) ->
+        uid = item[0]
+        name = item[1]
+        option = "<option value='#{uid}'>#{name}</option>"
+        $select.append option
+
+
+  ### EVENT HANDLER ###
+
+  on_category_change: (event) =>
+    ###
+     * Eventhandler for category change
+    ###
+    console.debug "°°° WorksheetAddanalysesview::on_category_change °°°"
+
+    # The select element for WS Template
+    $el = $(event.currentTarget)
+
+    # extract the category UID and filter the services box
+    category_uid = $el.val()
+    @filter_service_selector_by_category_uid category_uid
+
+
+  on_search_click: (event) =>
+    ###
+     * Eventhandler for the search button
+    ###
+    console.debug "°°° WorksheetAddanalysesview::on_search_click °°°"
+
+    # Prevent form submit
+    event.preventDefault()
+
+    form = @get_listing_form()
+    form_id = @get_listing_form_id()
+
+    filter_indexes = [
+      "FilterByCategory"
+      "FilterByService"
+      "FilterByClient"
+    ]
+
+    # The filter elements (Category/Service/Client) belong to another form.
+    # Therefore, we need to inject these values into the listing form as hidden
+    # input fields.
+    $.each filter_indexes, (index, filter) ->
+      name = "#{form_id}_#{filter}"
+      $el = $("select[name='#{name}']")
+      value = $el.val()
+
+      # get the corresponding input element of the listing form
+      input = $("input[name='#{name}']", form)
+      if input.length == 0
+        form.append "<input name='#{name}' value='#{value}' type='hidden'/>"
+        input = $("input[name='#{name}']", form)
+      input.val value
+
+      # omit the field if the value is set to any
+      if value == "any"
+         input.remove()
+
+    # extract the data of the listing form and post it to the AddAnalysesView
+    form_data = new FormData form[0]
+    form_data.set "table_only", form_id
+
+    @ajax_submit
+      data: form_data
+      processData: no  # do not transform to a query string
+      contentType: no # do not set any content type header
+    .done (data) ->
+      $container = $("div.bika-listing-table-container", form)
+      $data = $(data)
+      if $data.find("tbody").length == 0
+        $container.html "<div class='discreet info'>0 #{_('Results')}</div>"
+      else
+        $container.html data
+        window.bika.lims.BikaListingTableView.load_transitions()
+
+
+
 class window.WorksheetAddQCAnalysesView
   ###
    * Controller class for Worksheet's add blank/control views
@@ -824,18 +1013,12 @@ class window.WorksheetManageResultsView
     # https://github.com/plone/plone.app.jquerytools/blob/master/plone/app/jquerytools/browser/overlayhelpers.js
     $(el).prepOverlay
       subtype: "ajax"
-      filter: "h1,div.remarks-widget"
+      filter: "h1,span.remarks_history"
       config:
         closeOnClick: yes
         closeOnEsc: yes
         onBeforeLoad: (event) ->
           overlay = this.getOverlay()
-          $("div.pb-ajax>div", overlay).addClass("container")
-          # Remove editable elements
-          $("h3", overlay).remove()
-          $("textarea", overlay).remove()
-          $("input", overlay).remove()
-          # make the overlay draggable
           overlay.draggable()
         onLoad: (event) ->
           $.mask.close()
@@ -857,24 +1040,11 @@ class window.WorksheetManageResultsView
     analysis = $("#wideinterims_analyses").val()
     interim = $("#wideinterims_interims").val()
     empty_only = $("#wideinterims_empty").is(":checked")
-    value = $("#wideinterims_value").val()
 
-    # N.B.: Workaround to notify the ReactJS listing component about the changed
-    # values
-    set_value = (input, value) ->
-      # Manually select the checkbox of this row
-      # https://github.com/senaite/senaite.core/issues/1202
-      # https://stackoverflow.com/questions/23892547/what-is-the-best-way-to-trigger-onchange-event-in-react-js
-      # TL;DR: React library overrides input value setter
-      nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set
-      nativeInputValueSetter.call(input, value)
-      evt = new Event('input', {bubbles: true})
-      input.dispatchEvent(evt)
-
-    $("tr td input[column_key='#{interim}']").each (index, input) ->
+    $("tr td input[column_key='#{interim}']").each (index, element) ->
       if empty_only
         if $(this).val() == "" or $(this).val().match(/\d+/) == "0"
-          set_value input, value
+          $(this).val $("#wideinterims_value").val()
       else
-        set_value input, value
-      return true
+        $(this).val $("#wideinterims_value").val()
+      $(this).trigger "change"

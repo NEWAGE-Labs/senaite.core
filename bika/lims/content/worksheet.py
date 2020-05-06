@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import re
@@ -110,8 +110,8 @@ schema = BikaSchema.copy() + Schema((
 
     RemarksField(
         'Remarks',
+        searchable=True,
         widget=RemarksWidget(
-            render_own_label=True,
             label=_("Remarks"),
         ),
     ),
@@ -206,10 +206,6 @@ class Worksheet(BaseFolder, HistoryAwareMixin):
             method = self.getMethod()
             if method and analysis.isMethodAllowed(method):
                 analysis.setMethod(method)
-
-        # Assign the worksheet's analyst to the analysis
-        # https://github.com/senaite/senaite.core/issues/1409
-        analysis.setAnalyst(self.getAnalyst())
 
         # Transition analysis to "assigned"
         actions_pool = ActionHandlerPool.get_instance()
@@ -1115,6 +1111,17 @@ class Worksheet(BaseFolder, HistoryAwareMixin):
         method = wst.getRestrictToMethod()
         if method:
             self.setMethod(method, True)
+
+    def getInstrumentTitle(self):
+        """
+        Returns the instrument title
+        :returns: instrument's title
+        :rtype: string
+        """
+        instrument = self.getInstrument()
+        if instrument:
+            return instrument.Title()
+        return ''
 
     def getWorksheetTemplateUID(self):
         """

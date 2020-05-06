@@ -11,6 +11,13 @@
       name="getContacts"
     />
 
+    <adapter
+      for="bika.lims.interfaces.IClient
+           zope.publisher.interfaces.browser.IBrowserRequest"
+      factory="bika.lims.browser.client.ReferenceWidgetVocabulary"
+      provides="bika.lims.interfaces.IReferenceWidgetVocabulary"
+    />
+
     <browser:page
       for="bika.lims.interfaces.IClient"
       name="batches"
@@ -39,6 +46,14 @@
       for="bika.lims.interfaces.IClient"
       name="artemplates"
       class="bika.lims.browser.client.ClientARTemplatesView"
+      permission="zope2.View"
+      layer="bika.lims.interfaces.IBikaLIMS"
+    />
+
+    <browser:page
+      for="bika.lims.interfaces.IClient"
+      name="srtemplates"
+      class="bika.lims.browser.client.ClientSamplingRoundTemplatesView"
       permission="zope2.View"
       layer="bika.lims.interfaces.IBikaLIMS"
     />
@@ -79,6 +94,22 @@
       for="bika.lims.interfaces.IClient"
       name="contacts"
       class="bika.lims.browser.client.ClientContactsView"
+      permission="zope2.View"
+      layer="bika.lims.interfaces.IBikaLIMS"
+    />
+
+    <browser:page
+      for="bika.lims.interfaces.IClient"
+      name="getClientInfo"
+      class="bika.lims.browser.client.ajaxGetClientInfo"
+      permission="zope.Public"
+      layer="bika.lims.interfaces.IBikaLIMS"
+    />
+
+    <browser:page
+      for="bika.lims.interfaces.IClient"
+      name="sampling_rounds_view"
+      class="bika.lims.browser.client.ClientSamplingRoundsView"
       permission="zope2.View"
       layer="bika.lims.interfaces.IBikaLIMS"
     />

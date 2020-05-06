@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -27,7 +27,6 @@ from bika.lims import bikaMessageFactory as _
 from bika.lims.api.security import check_permission
 from bika.lims.browser.bika_listing import BikaListingView
 from bika.lims.permissions import FieldEditProfiles
-from bika.lims.utils import format_supsub
 from bika.lims.utils import get_image
 from bika.lims.utils import get_link
 from plone.memoize import view
@@ -80,6 +79,7 @@ class AnalysisProfileAnalysesView(BikaListingView):
                 "sortable": False}),
             ("Unit", {
                 "title": _("Unit"),
+                "index": "getUnit",
                 "sortable": False}),
             ("Price", {
                 "title": _("Price"),
@@ -237,10 +237,6 @@ class AnalysisProfileAnalysesView(BikaListingView):
             item["replace"]["Methods"] = ", ".join(links)
         else:
             item["methods"] = ""
-
-        # Unit
-        unit = obj.getUnit()
-        item["Unit"] = unit and format_supsub(unit) or ""
 
         # Icons
         after_icons = ""

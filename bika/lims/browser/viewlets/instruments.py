@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims import api
@@ -91,11 +91,9 @@ class InstrumentQCFailuresViewlet(ViewletBase):
     def available(self):
         """Control availability of the viewlet
         """
-        context_state = api.get_view("plone_context_state")
-        url = context_state.current_page_url()
-        portal_url = api.get_url(api.get_portal())
+        url = api.get_url(self.context)
         # render on the portal root
-        if url.endswith(portal_url):
+        if self.context == api.get_portal():
             return True
         # render on the front-page
         if url.endswith("/front-page"):

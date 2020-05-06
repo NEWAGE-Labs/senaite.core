@@ -15,86 +15,65 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
+
+"""Analysis Category - the category of the analysis service
+"""
 
 import transaction
 from AccessControl import ClassSecurityInfo
-from Products.Archetypes.Field import FloatField
-from Products.Archetypes.Field import ReferenceField
-from Products.Archetypes.Field import TextField
-from Products.Archetypes.Schema import Schema
-from Products.Archetypes.Widget import DecimalWidget
-from Products.Archetypes.Widget import TextAreaWidget
-from Products.Archetypes.public import BaseContent
-from Products.Archetypes.public import registerType
+from Products.Archetypes.public import *
 from Products.Archetypes.references import HoldingReference
 from Products.CMFCore.WorkflowCore import WorkflowException
-from zope.interface import implements
-
-from bika.lims import api
+from Products.CMFCore.utils import getToolByName
 from bika.lims import bikaMessageFactory as _
-from bika.lims.browser.widgets import ReferenceWidget
-from bika.lims.catalog.bikasetup_catalog import SETUP_CATALOG
 from bika.lims.config import PROJECTNAME
 from bika.lims.content.bikaschema import BikaSchema
-from bika.lims.interfaces import IAnalysisCategory
-from bika.lims.interfaces import IDeactivable
-from bika.lims.interfaces import IHaveDepartment
-
-Comments = TextField(
-    "Comments",
-    default_output_type="text/plain",
-    allowable_content_types=("text/plain",),
-    widget=TextAreaWidget(
-        description=_(
-            "To be displayed below each Analysis Category section on results "
-            "reports."),
-        label=_("Comments")),
-)
-
-Department = ReferenceField(
-    "Department",
-    required=1,
-    allowed_types=("Department",),
-    relationship="AnalysisCategoryDepartment",
-    referenceClass=HoldingReference,
-    widget=ReferenceWidget(
-        label=_("Department"),
-        description=_("The laboratory department"),
-        showOn=True,
-        catalog_name=SETUP_CATALOG,
-        base_query={
-            "is_active": True,
-            "sort_on": "sortable_title",
-            "sort_order": "ascending"
-        },
-    )
-)
-
-SortKey = FloatField(
-    "SortKey",
-    validators=("SortKeyValidator",),
-    widget=DecimalWidget(
-        label=_("Sort Key"),
-        description=_(
-            "Float value from 0.0 - 1000.0 indicating the sort order. "
-            "Duplicate values are ordered alphabetically."),
-    ),
-)
+from bika.lims.interfaces import IAnalysisCategory, IDeactivable
+from zope.interface import implements
 
 schema = BikaSchema.copy() + Schema((
-    Comments,
-    Department,
-    SortKey,
+    TextField(
+        'Comments',
+        default_output_type='text/plain',
+        allowable_content_types=('text/plain',),
+        widget=TextAreaWidget(
+            description=_(
+                "To be displayed below each Analysis Category section on "
+                "results reports."),
+            label=_("Comments")),
+    ),
+    ReferenceField(
+        'Department',
+        required=1,
+        vocabulary='getDepartments',
+        allowed_types=('Department',),
+        relationship='AnalysisCategoryDepartment',
+        referenceClass=HoldingReference,
+        widget=ReferenceWidget(
+            checkbox_bound=0,
+            label=_("Department"),
+            description=_("The laboratory department"),
+        ),
+    ),
+    FloatField(
+        'SortKey',
+        validators=('SortKeyValidator',),
+        widget=DecimalWidget(
+            label=_("Sort Key"),
+            description=_(
+                "Float value from 0.0 - 1000.0 indicating the sort "
+                "order. Duplicate values are ordered alphabetically."),
+        ),
+    ),
 ))
-
 schema['description'].widget.visible = True
 schema['description'].schemata = 'default'
 
 
 class AnalysisCategory(BaseContent):
-    implements(IAnalysisCategory, IHaveDepartment, IDeactivable)
+    implements(IAnalysisCategory, IDeactivable)
     security = ClassSecurityInfo()
     displayContentsTab = False
     schema = schema
@@ -105,12 +84,25 @@ class AnalysisCategory(BaseContent):
         from bika.lims.idserver import renameAfterCreation
         renameAfterCreation(self)
 
+    def getDepartments(self):
+        bsc = getToolByName(self, 'bika_setup_catalog')
+        deps = []
+        for d in bsc(portal_type='Department',
+                     is_active=True):
+            deps.append((d.UID, d.Title))
+        return DisplayList(deps)
+
+    def getDepartmentTitle(self):
+        field = self.Schema().getField('Department')
+        dept = field.get(self)
+        return dept.Title() if dept else ''
+
     def workflow_script_deactivate(self):
         # A instance cannot be deactivated if it contains services
-        query = dict(portal_type="AnalysisService", category_uid=self.UID())
-        brains = api.search(query, SETUP_CATALOG)
-        if brains:
-            pu = api.get_tool("plone_utils")
+        pu = getToolByName(self, 'plone_utils')
+        bsc = getToolByName(self, 'bika_setup_catalog')
+        ars = bsc(portal_type='AnalysisService', getCategoryUID=self.UID())
+        if ars:
             message = _("Category cannot be deactivated because it contains "
                         "Analysis Services")
             pu.addPortalMessage(message, 'error')

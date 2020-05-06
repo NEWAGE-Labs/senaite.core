@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import itertools
@@ -27,7 +27,7 @@ from bika.lims.api.snapshot import get_snapshot_count
 from bika.lims.api.snapshot import get_snapshot_metadata
 from bika.lims.api.snapshot import get_snapshots
 from bika.lims.api.user import get_user_id
-from bika.lims.interfaces import IAuditable, IAuditLogCatalog
+from bika.lims.interfaces import IAuditable
 from plone.indexer import indexer
 from plone.memoize.ram import DontCache
 from plone.memoize.ram import cache
@@ -129,7 +129,7 @@ def action(instance):
     return get_action(last_snapshot)
 
 
-@indexer(IAuditable, IAuditLogCatalog)
+@indexer(IAuditable)
 def listing_searchable_text(instance):
     """Fulltext search for the audit metadata
     """

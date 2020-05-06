@@ -4,11 +4,13 @@
       name="title">Contains workflow definitions for your portal</property>
   <object name="bika_analysis_workflow" meta_type="Workflow"/>
   <object name="bika_ar_workflow" meta_type="Workflow"/>
+  <object name="bika_arimport_workflow" meta_type="Workflow"/>
   <object name="bika_duplicateanalysis_workflow" meta_type="Workflow"/>
   <object name="bika_referenceanalysis_workflow" meta_type="Workflow"/>
   <object name="bika_referencesample_workflow" meta_type="Workflow"/>
   <object name="bika_reject_analysis_workflow" meta_type="Workflow"/>
   <object name="bika_sample_workflow" meta_type="Workflow"/>
+  <object name="bika_samplinground_workflow" meta_type="Workflow"/>
   <object name="bika_worksheet_workflow" meta_type="Workflow"/>
   <object name="folder_workflow" meta_type="Workflow"/>
   <object name="intranet_folder_workflow" meta_type="Workflow"/>
@@ -146,13 +148,6 @@
   -->
   <object name="senaite_worksheets_workflow" meta_type="Workflow" />
 
-  <!-- Workflow: senaite_batches_workflow
-  A "one-state workflow" for batches folder (BatchFolder type).
-  A copy of senaite_one_state_workflow, but:
-   - "Delete objects" granted to lab personnel
-  -->
-  <object name="senaite_batches_workflow" meta_type="Workflow"/>
-
   <!-- workflow: senaite_batch_workflow
   Custom workflow for batches. Batches can be cancelled and closed.
   Only lab personnel allowed.
@@ -208,6 +203,9 @@
     <type type_id="Departments">
       <bound-workflow workflow_id="senaite_one_state_workflow"/>
     </type>
+    <type type_id="IdentifierTypes">
+      <bound-workflow workflow_id="senaite_one_state_workflow"/>
+    </type>
     <type type_id="InstrumentLocations">
       <bound-workflow workflow_id="senaite_one_state_workflow"/>
     </type>
@@ -250,6 +248,12 @@
     <type type_id="SamplingDeviations">
       <bound-workflow workflow_id="senaite_one_state_workflow"/>
     </type>
+    <type type_id="SamplingRounds">
+      <bound-workflow workflow_id="senaite_one_state_workflow"/>
+    </type>
+    <type type_id="SRTemplates">
+      <bound-workflow workflow_id="senaite_one_state_workflow"/>
+    </type>
     <type type_id="SubGroups">
       <bound-workflow workflow_id="senaite_one_state_workflow"/>
     </type>
@@ -271,7 +275,7 @@
       <bound-workflow workflow_id="senaite_one_state_workflow"/>
     </type>
     <type type_id="BatchFolder">
-      <bound-workflow workflow_id="senaite_batches_workflow"/>
+      <bound-workflow workflow_id="senaite_one_state_workflow"/>
     </type>
     <type type_id="InstrumentCalibration">
       <bound-workflow workflow_id="senaite_one_state_workflow"/>
@@ -374,6 +378,12 @@
     <type type_id="SamplingDeviation">
       <bound-workflow workflow_id="senaite_deactivable_type_workflow"/>
     </type>
+    <type type_id="SamplingRound">
+      <bound-workflow workflow_id="senaite_deactivable_type_workflow"/>
+    </type>
+    <type type_id="SRTemplate">
+      <bound-workflow workflow_id="senaite_deactivable_type_workflow"/>
+    </type>
     <type type_id="StorageLocation">
       <bound-workflow workflow_id="senaite_deactivable_type_workflow"/>
     </type>
@@ -398,11 +408,6 @@
       <bound-workflow workflow_id="senaite_deactivable_type_workflow"/>
     </type>
 
-    <!-- Dexterity: Dynamic AnalysisSpec -->
-    <type type_id="DynamicAnalysisSpec">
-      <bound-workflow workflow_id="senaite_deactivable_type_workflow"/>
-    </type>
-
 
     <!--
     *** BINDINGS TO "senaite_cancellable_type_workflow" ***
@@ -420,6 +425,12 @@
     -->
     <type type_id="AnalysisRequest">
       <bound-workflow workflow_id="bika_ar_workflow"/>
+    </type>
+    <type type_id="ARImports">
+      <bound-workflow workflow_id="bika_arimports_workflow"/>
+    </type>
+    <type type_id="ARImport">
+      <bound-workflow workflow_id="bika_arimport_workflow"/>
     </type>
     <type type_id="Batch">
       <bound-workflow workflow_id="senaite_batch_workflow"/>

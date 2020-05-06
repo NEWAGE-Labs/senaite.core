@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -67,9 +67,10 @@ class LabContactsView(BikaListingView):
         self.pagesize = 25
 
         self.columns = collections.OrderedDict((
+            # TODO: Better sort by last name (index required!)
             ("Fullname", {
                 "title": _("Name"),
-                "index": "sortable_title"}),
+                "index": "getFullname"}),
             ("DefaultDepartment", {
                 "title": _("Default Department"),
                 "toggle": False}),

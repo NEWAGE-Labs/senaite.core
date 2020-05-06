@@ -15,41 +15,14 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from plone.app.contentmenu.menu import WorkflowMenu as BaseClass
-from plone.app.contentmenu.view import ContentMenuProvider
-from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
-from zope.component import getUtility
-from zope.browsermenu.interfaces import IBrowserMenu
-
-
-class SenaiteContentMenuProvider(ContentMenuProvider):
-    """Provides a proper styled content menu
-    """
-    index = ViewPageTemplateFile(
-        "templates/plone.app.contentmenu.contentmenu.pt")
-
-    def render(self):
-        return self.index()
-
-    # From IContentMenuView
-
-    def available(self):
-        return True
-
-    def menu(self):
-        menu = getUtility(IBrowserMenu, name="plone_contentmenu")
-        items = menu.getMenuItems(self.context, self.request)
-        # always filter out the selection of the default view
-        items = filter(
-            lambda a: not a["action"].endswith("/select_default_view"), items)
-        items.reverse()
-        return items
 
 
 class WorkflowMenu(BaseClass):
+
     def getMenuItems(self, context, request):
         """Overrides the workflow actions menu displayed top right in the
         object's view. Displays the current state of the object, as well as a
@@ -59,6 +32,6 @@ class WorkflowMenu(BaseClass):
         """
         actions = super(WorkflowMenu, self).getMenuItems(context, request)
         # Remove status history menu item ('Advanced...')
-        return filter(
-            lambda a: not a["action"].endswith("/content_status_history"),
-            actions)
+        actions = [action for action in actions
+            if not action['action'].endswith('/content_status_history')]
+        return actions

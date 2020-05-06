@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import re
@@ -137,7 +137,20 @@ class BatchBookView(BikaListingView):
         wf = api.get_tool('portal_workflow')
         schema = self.context.Schema()
 
-        ars = self.context.getAnalysisRequests(is_active=True)
+        ars = []
+
+        for o in schema.getField('InheritedObjects').get(self.context):
+            if o.portal_type == 'AnalysisRequest':
+                if o not in ars:
+                    ars.append(o)
+            elif o.portal_type == 'Batch':
+                for ar in o.getAnalysisRequests(is_active=True):
+                    if ar not in ars:
+                        ars.append(ar)
+
+        for ar in self.context.getAnalysisRequests(is_active=True):
+            if ar not in ars:
+                ars.append(ar)
 
         self.categories = []
         analyses = {}

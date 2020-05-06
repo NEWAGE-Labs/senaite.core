@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims import api
@@ -33,7 +33,7 @@ class LabAnalysesTable(AnalysesView):
 
         self.contentFilter.update({
             "getPointOfCapture": "lab",
-            "getAncestorsUIDs": [api.get_uid(context)]
+            "getRequestUID": api.get_uid(context)
         })
 
         self.form_id = "lab_analyses"
@@ -52,7 +52,7 @@ class FieldAnalysesTable(AnalysesView):
 
         self.contentFilter.update({
             "getPointOfCapture": "field",
-            "getAncestorsUIDs": [api.get_uid(context)]
+            "getRequestUID": api.get_uid(context)
         })
 
         self.form_id = "field_analyses"

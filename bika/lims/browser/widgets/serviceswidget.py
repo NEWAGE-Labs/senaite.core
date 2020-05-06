@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -49,7 +49,7 @@ class ServicesView(BikaListingView):
             method_uid = context.getMethodUID()
             if method_uid:
                 self.contentFilter.update({
-                    "method_available_uid": method_uid
+                    "getAvailableMethodUIDs": method_uid
                 })
 
         self.context_actions = {}

@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <object name="portal_factory" meta_type="Plone Factory Tool">
  <factorytypes>
+  <type portal_type="ARImport"/>
   <type portal_type="ARReport"/>
   <type portal_type="AnalysisProfile"/>
   <type portal_type="ARTemplate"/>
@@ -30,6 +31,8 @@
   <type portal_type="InstrumentLocation"/>
   <type portal_type="InstrumentLocations"/>
   <type portal_type="InstrumentValidation"/>
+  <type portal_type="Invoice"/>
+  <type portal_type="InvoiceBatch"/>
   <type portal_type="LabContact"/>
   <type portal_type="LabProduct"/>
   <type portal_type="Manufacturer"/>
@@ -40,12 +43,14 @@
   <type portal_type="ReferenceSample"/>
   <type portal_type="ReflexRule"/>
   <type portal_type="Pricelist"/>
+  <type portal_type="Sample"/>
   <type portal_type="SampleMatrix"/>
   <type portal_type="SampleCondition"/>
   <type portal_type="SamplePoint"/>
   <type portal_type="StorageLocation"/>
   <type portal_type="SampleType"/>
   <type portal_type="SamplingDeviation"/>
+  <type portal_type="SRTemplate"/>
   <type portal_type="SubGroup"/>
   <type portal_type="Supplier"/>
   <type portal_type="SupplierContact"/>

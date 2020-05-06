@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims import logger
@@ -74,7 +74,6 @@ def getCatalog(instance, field='UID'):
             and at.catalog_map[instance.portal_type][0] or 'portal_catalog'
         catalog = getToolByName(plone, catalog_name)
         return catalog
-
 
 def setup_catalogs(
         portal, catalogs_definition={},
@@ -136,7 +135,6 @@ def setup_catalogs(
     if not force_no_reindex:
         _cleanAndRebuildIfNeeded(portal, clean_and_rebuild)
     return clean_and_rebuild
-
 
 def _merge_catalog_definitions(dict1, dict2):
     """
@@ -200,7 +198,6 @@ def _merge_catalog_definitions(dict1, dict2):
             continue
         outdict[k] = v.copy()
     return outdict
-
 
 def _map_content_types(archetype_tool, catalogs_definition):
     """
@@ -429,9 +426,12 @@ def _cleanAndRebuildIfNeeded(portal, cleanrebuild):
     for cat in cleanrebuild:
         catalog = getToolByName(portal, cat)
         if catalog:
-            catalog.clearFindAndRebuild()
+            if hasattr(catalog, "softClearFindAndRebuild"):
+                catalog.softClearFindAndRebuild()
+            else:
+                catalog.clearFindAndRebuild()
         else:
-            logger.warning("Catalog '%s' not found" % cat)
+            logger.warning('%s do not found' % cat)
 
 
 class Empty:

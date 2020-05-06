@@ -15,11 +15,10 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import re
-from collections import OrderedDict
 from datetime import datetime
 from datetime import timedelta
 
@@ -35,7 +34,6 @@ from DateTime.interfaces import DateTimeError
 from plone import api as ploneapi
 from plone.api.exc import InvalidParameterError
 from plone.app.layout.viewlets.content import ContentHistoryView
-from plone.behavior.interfaces import IBehaviorAssignable
 from plone.dexterity.interfaces import IDexterityContent
 from plone.i18n.normalizer.interfaces import IFileNameNormalizer
 from plone.i18n.normalizer.interfaces import IIDNormalizer
@@ -53,13 +51,12 @@ from Products.CMFPlone.utils import safe_unicode
 from Products.PlonePAS.tools.memberdata import MemberData
 from Products.ZCatalog.interfaces import ICatalogBrain
 from zope import globalrequest
+from zope.component import getMultiAdapter
 from zope.component import getUtility
-from zope.component import queryMultiAdapter
 from zope.component.interfaces import IFactory
 from zope.event import notify
 from zope.lifecycleevent import ObjectCreatedEvent
 from zope.lifecycleevent import modified
-from zope.schema import getFieldsInOrder
 from zope.security.interfaces import Unauthorized
 
 """SENAITE LIMS Framework API
@@ -336,26 +333,20 @@ def get_schema(brain_or_object):
 
 
 def get_fields(brain_or_object):
-    """Get a name to field mapping of the object
+    """Get the list of fields from the object
 
     :param brain_or_object: A single catalog brain or content object
     :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :returns: Mapping of name -> field
-    :rtype: OrderedDict
+    :returns: List of fields
+    :rtype: list
     """
     obj = get_object(brain_or_object)
     schema = get_schema(obj)
     if is_dexterity_content(obj):
-        # get the fields directly provided by the interface
-        fields = getFieldsInOrder(schema)
-        # append the fields coming from behaviors
-        behavior_assignable = IBehaviorAssignable(obj)
-        if behavior_assignable:
-            behaviors = behavior_assignable.enumerateBehaviors()
-            for behavior in behaviors:
-                fields.extend(getFieldsInOrder(behavior.interface))
-        return OrderedDict(fields)
-    return OrderedDict(schema)
+        names = schema.names()
+        fields = map(lambda name: schema.get(name), names)
+        return dict(zip(names, fields))
+    return dict(zip(schema.keys(), schema.fields()))
 
 
 def get_id(brain_or_object):
@@ -951,7 +942,7 @@ def get_version(brain_or_object):
     return getattr(aq_base(obj), "version_id", 0)
 
 
-def get_view(name, context=None, request=None, default=None):
+def get_view(name, context=None, request=None):
     """Get the view by name
 
     :param name: The name of the view
@@ -965,10 +956,7 @@ def get_view(name, context=None, request=None, default=None):
     """
     context = context or get_portal()
     request = request or get_request() or None
-    view = queryMultiAdapter((get_object(context), request), name=name)
-    if view is None:
-        return default
-    return view
+    return getMultiAdapter((get_object(context), request), name=name)
 
 
 def get_request():
@@ -1332,15 +1320,13 @@ def to_searchable_text_metadata(value):
     if isinstance(value, (bool)):
         return u""
     if isinstance(value, (list, tuple)):
-        values = map(to_searchable_text_metadata, value)
-        values = filter(None, values)
-        return " ".join(values)
-    if isinstance(value, dict):
-        return to_searchable_text_metadata(value.values())
+        for v in value:
+            return to_searchable_text_metadata(v)
+    if isinstance(value, (dict)):
+        for k, v in value.items():
+            return to_searchable_text_metadata(v)
     if is_date(value):
         return value.strftime("%Y-%m-%d")
-    if is_at_content(value):
-        return to_searchable_text_metadata(get_title(value))
     if not isinstance(value, basestring):
         value = str(value)
     return safe_unicode(value)
@@ -1390,23 +1376,3 @@ def to_display_list(pairs, sort_by="key", allow_empty=True):
         dl = dl.sortedByValue()
 
     return dl
-
-
-def text_to_html(text, wrap="p", encoding="utf8"):
-    """Convert `\n` sequences in the text to HTML `\n`
-
-    :param text: Plain text to convert
-    :param wrap: Toggle to wrap the text in a
-    :returns: HTML converted and encoded text
-    """
-    if not text:
-        return ""
-    # handle text internally as unicode
-    text = safe_unicode(text)
-    # replace newline characters with HTML entities
-    html = text.replace("\n", "<br/>")
-    if wrap:
-        html = u"<{tag}>{html}</{tag}>".format(
-            tag=wrap, html=html)
-    # return encoded html
-    return html.encode(encoding)

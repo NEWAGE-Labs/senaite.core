@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims import bikaMessageFactory as _
@@ -26,14 +26,6 @@ from zope.i18n.locales import locales
 # XXX Refactor these dependencies to explicit imports!
 from bika.lims.utils import t  # noqa
 from bika.lims.permissions import *  # noqa
-
-try:
-    import collective.indexing
-    collective.indexing  # noqa
-except ImportError:
-    USE_COLLECTIVE_INDEXING = False
-else:
-    USE_COLLECTIVE_INDEXING = True
 
 
 PROJECTNAME = "bika.lims"
@@ -87,6 +79,11 @@ ATTACHMENT_OPTIONS = DisplayList((
 ATTACHMENT_REPORT_OPTIONS = DisplayList((
     ('r', _('Render in Report')),
     ('i', _('Ignore in Report')),
+))
+ARIMPORT_OPTIONS = DisplayList((
+    ('c', _('Classic')),
+    ('p', _('Profiles')),
+    # ('s', _('Special')),
 ))
 GENDERS = DisplayList((
     ('male', _('Male')),

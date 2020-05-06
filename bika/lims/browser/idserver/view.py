@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims import api
@@ -78,6 +78,13 @@ class IDServerView(BrowserView):
                     message = _("Seeding key {} to {}".format(key, value))
                 self.add_status_message(message, "info")
 
+        # Handle "Flush" action
+        if form.get("flush", False):
+            message = _("Flushed Number Storage")
+            self.add_status_message(message, "warning")
+            self.flush()
+            return self.template()
+
         return self.template()
 
     def get_id_template_for(self, key):
@@ -122,3 +129,10 @@ class IDServerView(BrowserView):
 
         new_seq = self.set_seed(prefix, seed)
         return 'IDServerView: "%s" seeded to %s' % (prefix, new_seq)
+
+    def flush(self):
+        """ Flush the storage
+        """
+        number_generator = getUtility(INumberGenerator)
+        number_generator.flush()
+        return "IDServerView: Number storage flushed!"

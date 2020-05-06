@@ -20,6 +20,7 @@ Needed Imports:
     >>> from bika.lims.api.analysis import get_formatted_interval
     >>> from bika.lims.api.analysis import is_out_of_range
     >>> from bika.lims.content.analysisrequest import AnalysisRequest
+    >>> from bika.lims.content.sample import Sample
     >>> from bika.lims.utils.analysisrequest import create_analysisrequest
     >>> from bika.lims.utils import tmpID
     >>> from bika.lims.workflow import doActionFor
@@ -511,11 +512,6 @@ Set open interval for min and max from water specification
     ...     range['max_operator'] = 'lt'
     >>> specification.setResultsRange(ranges)
 
-We need to re-apply the Specification for the changes to take effect:
-
-    >>> ar.setSpecification(None)
-    >>> ar.setSpecification(specification)
-
 First, get the analyses from slot 1 and sort them asc:
 
     >>> analyses = worksheet.get_analyses_at(1)
@@ -544,11 +540,6 @@ Set left-open interval for min and max from water specification
     ...     range['max_operator'] = 'lt'
     >>> specification.setResultsRange(ranges)
 
-We need to re-apply the Specification for the changes to take effect:
-
-    >>> ar.setSpecification(None)
-    >>> ar.setSpecification(specification)
-
 First, get the analyses from slot 1 and sort them asc:
 
     >>> analyses = worksheet.get_analyses_at(1)
@@ -576,11 +567,6 @@ Set right-open interval for min and max from water specification
     ...     range['min_operator'] = 'gt'
     ...     range['max_operator'] = 'leq'
     >>> specification.setResultsRange(ranges)
-
-We need to re-apply the Specification for the changes to take effect:
-
-    >>> ar.setSpecification(None)
-    >>> ar.setSpecification(specification)
 
 First, get the analyses from slot 1 and sort them asc:
 

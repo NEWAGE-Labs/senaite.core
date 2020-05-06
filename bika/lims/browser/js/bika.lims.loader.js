@@ -72,6 +72,14 @@ window.bika.lims.controllers =  {
     "div.overlay #client-base-edit":
         ['ClientOverlayHandler'],
 
+    // Client Sampling Rounds
+    ".template-bika-lims-content-samplingsround.portaltype-client":
+        ['ClientSamplingRoundAddEditView'],
+
+    // Sampling Rounds PrintView
+    "#sr_publish_container":
+        ['SamplingRoundPrintView'],
+
     // Reference Samples
     ".portaltype-referencesample.template-analyses":
         ['ReferenceSampleAnalysesView'],
@@ -122,6 +130,9 @@ window.bika.lims.controllers =  {
     // Worksheets
     ".portaltype-worksheetfolder":
         ['WorksheetFolderView'],
+
+    ".portaltype-worksheet.template-add_analyses":
+        ['WorksheetAddAnalysesView'],
 
     ".portaltype-worksheet.template-add_blank":
         ['WorksheetAddQCAnalysesView'],

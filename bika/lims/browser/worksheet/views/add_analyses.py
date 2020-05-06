@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -82,7 +82,7 @@ class AddAnalysesView(BikaListingView):
             ("getClientOrderNumber", {
                 "title": _("Order"),
                 "toggle": False,
-                "attr": "getClientOrderNumber"}),
+                "index": "getClientOrderNumber"}),
             ("getRequestID", {
                 "title": _("Request ID"),
                 "attr": "getRequestID",

@@ -15,25 +15,23 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2020 by it's authors.
+# Copyright 2018-2019 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
-from Products.Archetypes.public import ManagedSchema
-from Products.Archetypes.public import StringField
-from Products.Archetypes.public import StringWidget
-from Products.Archetypes.public import registerType
-from Products.CMFPlone.utils import safe_unicode
-from plone.app.folder.folder import ATFolder
-from zope.interface import implements
-
 from bika.lims import bikaMessageFactory as _
 from bika.lims.browser.fields import AddressField
 from bika.lims.browser.widgets import AddressWidget
 from bika.lims.config import PROJECTNAME
 from bika.lims.content.bikaschema import BikaFolderSchema
 from bika.lims.content.bikaschema import BikaSchema
-from bika.lims.interfaces import IOrganisation
+from plone.app.folder.folder import ATFolder
+from Products.Archetypes.public import ManagedSchema
+from Products.Archetypes.public import StringField
+from Products.Archetypes.public import StringWidget
+from Products.Archetypes.public import registerType
+from Products.CMFPlone.utils import safe_unicode
+
 
 schema = BikaFolderSchema.copy() + BikaSchema.copy() + ManagedSchema((
 
@@ -168,7 +166,6 @@ TitleField.widget.visible = {"edit": "hidden", "view": "invisible"}
 class Organisation(ATFolder):
     """Base class for Clients, Suppliers and for the Laboratory
     """
-    implements(IOrganisation)
 
     security = ClassSecurityInfo()
     displayContentsTab = False
