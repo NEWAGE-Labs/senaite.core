@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import os
@@ -369,7 +369,7 @@ class PrintView(BrowserView):
                 ar = self._ar_data(arobj)
                 ar['client'] = self._client_data(arobj.aq_parent)
                 ar["sample"] = dict()
-                if IReferenceSample.providedBy(an):
+                if IReferenceSample.providedBy(arobj):
                     ar['sample'] = self._sample_data(an.getSample())
                 else:
                     ar['sample'] = self._sample_data(an.getRequest())

@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from Products.ATContentTypes.content import schemata
@@ -53,19 +53,16 @@ class LabProductsView(BikaListingView):
                       'index': 'sortable_title',
                       'toggle': True},
             'Volume': {'title': _('Volume'),
-                       'index': 'getVolume',
                        'toggle': True},
             'Unit': {'title': _('Unit'),
-                       'index': 'getUnit',
                        'toggle': True},
             'Price': {'title': _('Price'),
-                       'index': 'getPrice',
+                       'index': 'price',
                        'toggle': True},
             'VATAmount': {'title': _('VAT Amount'),
-                       'index': 'getVATAmount',
                        'toggle': True},
             'TotalPrice': {'title': _('Total Price'),
-                       'index': 'getTotalPrice',
+                       'index': 'price_total',
                        'toggle': True},
         }
         self.review_states = [

@@ -5,12 +5,13 @@
     xmlns:monkey="http://namespaces.plone.org/monkey"
     i18n_domain="senaite.core">
 
+    <!-- Dynamic Results Range Adapter
+         Looked up in `abstractroutineanalysis.getResultsRange` -->
     <adapter
-      factory=".acquirefielddefaults.AcquireFieldDefaults"
-      provides="bika.lims.interfaces.IAcquireFieldDefaults"
-      for="bika.lims.interfaces.IAnalysisRequest"
-      name="DefaultAquireFieldDefaults"
-    />
+      for="bika.lims.interfaces.IRoutineAnalysis"
+      factory=".dynamicresultsrange.DynamicResultsRange"
+      provides="bika.lims.interfaces.IDynamicResultsRange"
+      />
 
     <adapter
       for="zope.interface.Interface
@@ -18,6 +19,25 @@
       factory="bika.lims.adapters.referencewidgetvocabulary.DefaultReferenceWidgetVocabulary"
       provides="bika.lims.interfaces.IReferenceWidgetVocabulary"
     />
+
+    <!-- ClientAwareReferenceWidgetVocabulary
+    Injects getClientUID or getParentUID as additional search criteria for
+    client-bound reference fields -->
+    <adapter
+      for="bika.lims.interfaces.IBatch
+           zope.publisher.interfaces.browser.IBrowserRequest"
+      factory=".referencewidgetvocabulary.ClientAwareReferenceWidgetVocabulary"
+      provides="bika.lims.interfaces.IReferenceWidgetVocabulary" />
+    <adapter
+      for="bika.lims.interfaces.IClient
+           zope.publisher.interfaces.browser.IBrowserRequest"
+      factory=".referencewidgetvocabulary.ClientAwareReferenceWidgetVocabulary"
+      provides="bika.lims.interfaces.IReferenceWidgetVocabulary" />
+    <adapter
+      for="bika.lims.interfaces.IAnalysisRequest
+           zope.publisher.interfaces.browser.IBrowserRequest"
+      factory=".referencewidgetvocabulary.ClientAwareReferenceWidgetVocabulary"
+      provides="bika.lims.interfaces.IReferenceWidgetVocabulary" />
 
 
     <!--
@@ -142,22 +162,18 @@
       for="bika.lims.interfaces.IAnalysisRequest"
       name="PrimaryAnalysisRequestFieldVisibility"
     />
+
+    <!-- Batch: Hide Client field if the batch is assigned to a Client or the
+    batch contains samples from different clients -->
+    <adapter
+      factory=".widgetvisibility.BatchClientFieldVisibility"
+      provides="bika.lims.interfaces.IATWidgetVisibility"
+      for="bika.lims.interfaces.IBatch"
+      name="BatchClientFieldVisibility"
+    />
     <!---
     END OF FIELDS/WIDGETS VISIBILITY
     -->
-
-    <adapter name='bika.lims.IHaveIdentifiersExtender' factory=".identifiers.IHaveIdentifiersSchemaExtender"/>
-    <adapter name='bika.lims.IHaveIdentifiersModifier' factory=".identifiers.IHaveIdentifiersSchemaModifier"/>
-
-    <adapter factory=".identifiers.IdentifiersIndexer" name="Identifiers"/>
-
-    <browser:page
-      for="*"
-      name="getidentifiertypes"
-      class="bika.lims.adapters.identifiers.ajaxGetIdentifierTypes"
-      permission="zope.Public"
-      layer="bika.lims.interfaces.IBikaLIMS"
-    />
 
     <!-- Stickers -->
     <!-- IGetStickerTemplates adapters -->

@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import re
@@ -658,8 +658,7 @@ class RestrictedCategoriesValidator:
         for category in value:
             if not category:
                 continue
-            services = bsc(
-                portal_type="AnalysisService", getCategoryUID=category)
+            services = bsc(portal_type="AnalysisService", category_uid=category)
             for service in services:
                 service = service.getObject()
                 calc = service.getCalculation()
@@ -778,21 +777,24 @@ class AnalysisSpecificationsValidator:
         fieldname = kwargs['field'].getName()
 
         # This value in request prevents running once per subfield value.
-        key = '{}{}'.format(instance.getId(), fieldname)
+        # self.name returns the name of the validator. This allows other
+        # subfield validators to be called if defined (eg. in other add-ons)
+        key = '{}-{}-{}'.format(self.name, instance.getId(), fieldname)
         if instance.REQUEST.get(key, False):
             return True
 
         # Walk through all AS UIDs and validate each parameter for that AS
-        services = request.get('service', [{}])[0]
-        for uid, service_name in services.items():
+        service_uids = request.get("uids", [])
+        for uid in service_uids:
             err_msg = self.validate_service(request, uid)
             if not err_msg:
                 continue
 
             # Validation failed
-            err_msg = "{}: {}".format(_("Validation for '{}' failed"),
-                                      _(err_msg))
-            err_msg = err_msg.format(service_name)
+            service = api.get_object_by_uid(uid)
+            title = api.get_title(service)
+
+            err_msg = "{}: {}".format(title, _(err_msg))
             translate = api.get_tool('translation_service').translate
             instance.REQUEST[key] = to_utf8(translate(safe_unicode(err_msg)))
             return instance.REQUEST[key]
@@ -1322,7 +1324,7 @@ class ReflexRuleValidator:
         bsc = getToolByName(instance, 'bika_setup_catalog')
         query = {
             'portal_type': 'AnalysisService',
-            'getAvailableMethodUIDs': method.UID()
+            'method_available_uid': method.UID()
         }
         method_ans_uids = [b.UID for b in bsc(query)]
         rules = instance.getReflexRules()

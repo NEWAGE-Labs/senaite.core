@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from Products.Archetypes.config import TOOL_NAME
@@ -25,6 +25,7 @@ from bika.lims import logger
 
 import json
 import Missing
+import six
 import sys, traceback
 
 
@@ -129,10 +130,15 @@ def load_field_values(instance, include_fields):
 def get_include_methods(request):
     """Retrieve include_methods values from the request
     """
-    methods = request.get("include_methods", "")
-    include_methods = [
-        x.strip() for x in methods.split(",") if x.strip()]
-    return include_methods
+    include_methods = request.get("include_methods[]")
+    if not include_methods:
+        include_methods = request.get("include_methods", [])
+
+    if isinstance(include_methods, six.string_types):
+        include_methods = include_methods.split(",")
+        include_methods = map(lambda me: me.strip(), include_methods)
+
+    return filter(None, include_methods)
 
 
 def load_method_values(instance, include_methods):

@@ -18,7 +18,8 @@
       <!-- AR Add form -->
       <script type="text/javascript"
               src="handlebars.js"
-              tal:attributes="src string:${portal/absolute_url}/++resource++bika.lims.js/thirdparty/handlebars/handlebars.js"></script>
+              tal:attributes="src string:${portal/absolute_url}/++resource++bika.lims.js/thirdparty/handlebars.min-v4.7.2.js"></script>
+
       <script type="text/javascript"
               src="bika.lims.analysisrequest.add.js"
               tal:attributes="src string:${portal/absolute_url}/++resource++bika.lims.js/bika.lims.analysisrequest.add.js"></script>
@@ -412,7 +413,6 @@
                   <tal:services tal:repeat="service python:services[category_title];">
                     <tr tal:define="service_uid service/UID;
                                     service_id service/getId;
-                                    service_acc service/getAccredited;
                                     service_keyword service/getKeyword;
                                     service_title service/Title;"
                         tal:attributes="id string:${service_id};
@@ -459,8 +459,8 @@
                                    style="height:auto;"
                                    tal:attributes="name string:${fieldname}:list;
                                                    value string:${service_uid};
-                                                   id string:cb_${service_uid};
                                                    class string:analysisservice-cb analysisservice-cb-${arnum};
+                                                   id string:cb_${arnum}_${service_uid};
                                                    alt service_title;
                                                    checked python:checked and 'checked' or '';"/>
                           </div>

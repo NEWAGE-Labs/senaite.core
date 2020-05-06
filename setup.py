@@ -15,12 +15,12 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from setuptools import setup, find_packages
 
-version = '1.3.2'
+version = '1.3.4'
 
 setup(
     name='senaite.core',
@@ -39,8 +39,8 @@ setup(
         "Programming Language :: Python",
     ],
     keywords=['senaite', 'lims', 'opensource'],
-    author='SENAITE Foundation',
-    author_email='support@senaite.com',
+    author="RIDING BYTES & NARALABS",
+    author_email="senaite@senaite.com",
     url='https://github.com/senaite/senaite.core',
     license='GPLv2',
     packages=find_packages(exclude=['ez_setup']),
@@ -76,12 +76,29 @@ setup(
         'zopyx.txng3.ext==3.4.0',
         "senaite.core.supermodel>=1.2.0",
         "senaite.core.listing>=1.1.0",
+        "senaite.core.spotlight",
         # Python 2.x is not supported by WeasyPrint v43
         'WeasyPrint==0.42.3',
         # tinycss2 >= 1.0.0 does not support Python 2.x anymore
         'tinycss2<1.0.0',
         # Add this line *after* senaite.impress 1.2.0 was realeased!
         'senaite.impress>=1.2.0',
+        # Python 2/3 compatibility library: https://six.readthedocs.io/
+        'six',
+        # Needed for `IPortalCatalogQueueProcessor`, which will be included in
+        # `Products.CMFCore` in Plone 5. Remove after we are on Plone 5!
+        'collective.indexing',
+        # Fix Scrutinizer (remove after we migrated to Python 3)
+        # https://github.com/python-pillow/Pillow/blob/master/CHANGES.rst#622-2020-01-02
+        'Pillow<7.0.0',
+        # https://pypi.org/project/more-itertools/
+        'more-itertools<6.0.0',
+        # cssselect2 0.3.0 does not support Python 2.x anymore
+        'cssselect2<0.3.0',
+        # beautifulsoup4 4.9.0 requires 'soupsieve<2.0'
+        'soupsieve<2.0.0',
+        # dependency for jsonapi
+        'simplejson',
     ],
     extras_require={
         'test': [

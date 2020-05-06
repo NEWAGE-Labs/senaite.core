@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims.browser import BrowserView
@@ -18665,6 +18665,7 @@ DISTRICTS = [
  ['CR', '02', 'Cant\xc3\xb3n de Jim\xc3\xa9nez'],
  ['CR', '03', 'Cant\xc3\xb3n de Hojancha'],
  ['CR', '04', 'Cant\xc3\xb3n Central de Heredia'],
+ ['CR', '07', 'Cant\xc3\xb3n de Garabito'],
  ['CR', '01', 'Cant\xc3\xb3n de Guatuso'],
  ['CR', '06', 'Cant\xc3\xb3n de Gu\xc3\xa1cimo'],
  ['CR', '01', 'Cant\xc3\xb3n de Grecia'],

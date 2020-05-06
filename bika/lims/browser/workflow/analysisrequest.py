@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from email.mime.multipart import MIMEMultipart
@@ -279,6 +279,8 @@ class WorkflowActionPrintSampleAdapter(WorkflowActionGenericAdapter):
             return False
         reports = sample.objectValues("ARReport")
         reports = sorted(reports, key=lambda report: report.getDatePublished())
+        if not reports:
+            return False
         last_report = reports[-1]
         if not last_report.getDatePrinted():
             last_report.setDatePrinted(DateTime())

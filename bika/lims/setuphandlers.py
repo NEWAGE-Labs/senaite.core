@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import itertools
@@ -28,6 +28,8 @@ from bika.lims.catalog import getCatalogDefinitions
 from bika.lims.catalog import setup_catalogs
 from bika.lims.catalog.catalog_utilities import addZCTextIndex
 from plone import api as ploneapi
+from plone.app.controlpanel.filter import IFilterSchema
+
 
 PROFILE_ID = "profile-bika.lims:default"
 
@@ -77,7 +79,6 @@ GROUPS = [
 
 NAV_BAR_ITEMS_TO_HIDE = (
     # List of items to hide from navigation bar
-    "arimports",
     "pricelists",
     "supplyorders",
 )
@@ -105,7 +106,6 @@ CATALOG_MAPPINGS = (
     ("Container", ["bika_setup_catalog"]),
     ("ContainerType", ["bika_setup_catalog"]),
     ("Department", ["bika_setup_catalog", "portal_catalog"]),
-    ("IdentifierType", ["bika_setup_catalog"]),
     ("Instrument", ["bika_setup_catalog", "portal_catalog"]),
     ("InstrumentLocation", ["bika_setup_catalog", "portal_catalog"]),
     ("InstrumentType", ["bika_setup_catalog", "portal_catalog"]),
@@ -117,7 +117,6 @@ CATALOG_MAPPINGS = (
     ("Preservation", ["bika_setup_catalog"]),
     ("ReferenceDefinition", ["bika_setup_catalog", "portal_catalog"]),
     ("ReferenceSample", ["bika_catalog", "portal_catalog"]),
-    ("SRTemplate", ["bika_setup_catalog", "portal_catalog"]),
     ("SampleCondition", ["bika_setup_catalog"]),
     ("SampleMatrix", ["bika_setup_catalog"]),
     ("SamplePoint", ["bika_setup_catalog", "portal_catalog"]),
@@ -134,7 +133,6 @@ INDEXES = (
     ("bika_catalog", "BatchDate", "", "DateIndex"),
     ("bika_catalog", "Creator", "", "FieldIndex"),
     ("bika_catalog", "Description", "", "ZCTextIndex"),
-    ("bika_catalog", "Identifiers", "", "KeywordIndex"),
     ("bika_catalog", "Title", "", "ZCTextIndex"),
     ("bika_catalog", "Type", "", "FieldIndex"),
     ("bika_catalog", "UID", "", "FieldIndex"),
@@ -151,8 +149,6 @@ INDEXES = (
     ("bika_catalog", "getExpiryDate", "", "DateIndex"),
     ("bika_catalog", "getId", "", "FieldIndex"),
     ("bika_catalog", "getReferenceDefinitionUID", "", "FieldIndex"),
-    ("bika_catalog", "getSampleTypeTitle", "", "FieldIndex"),
-    ("bika_catalog", "getSampleTypeUID", "", "FieldIndex"),
     ("bika_catalog", "getSupportedServices", "", "KeywordIndex"),
     ("bika_catalog", "id", "getId", "FieldIndex"),
     ("bika_catalog", "isValid", "", "BooleanIndex"),
@@ -162,66 +158,40 @@ INDEXES = (
     ("bika_catalog", "review_state", "", "FieldIndex"),
     ("bika_catalog", "sortable_title", "", "FieldIndex"),
     ("bika_catalog", "title", "", "FieldIndex"),
+    ("bika_catalog", "listing_searchable_text", "", "TextIndexNG3"),
 
     ("bika_setup_catalog", "Creator", "", "FieldIndex"),
     ("bika_setup_catalog", "Description", "", "ZCTextIndex"),
-    ("bika_setup_catalog", "Identifiers", "", "KeywordIndex"),
     ("bika_setup_catalog", "Title", "", "ZCTextIndex"),
     ("bika_setup_catalog", "Type", "", "FieldIndex"),
     ("bika_setup_catalog", "UID", "", "FieldIndex"),
     ("bika_setup_catalog", "allowedRolesAndUsers", "", "KeywordIndex"),
+    ("bika_setup_catalog", "category_uid", "", "KeywordIndex"),
     ("bika_setup_catalog", "created", "", "DateIndex"),
-    ("bika_setup_catalog", "getAccredited", "", "FieldIndex"),
-    ("bika_setup_catalog", "getAnalyst", "", "FieldIndex"),
-    ("bika_setup_catalog", "getAvailableMethodUIDs", "", "KeywordIndex"),
-    ("bika_setup_catalog", "getBlank", "", "FieldIndex"),
-    ("bika_setup_catalog", "getCalculationTitle", "", "FieldIndex"),
-    ("bika_setup_catalog", "getCalculationUID", "", "FieldIndex"),
-    ("bika_setup_catalog", "getCalibrationExpiryDate", "", "FieldIndex"),
-    ("bika_setup_catalog", "getCategoryTitle", "", "FieldIndex"),
-    ("bika_setup_catalog", "getCategoryUID", "", "FieldIndex"),
+    ("bika_setup_catalog", "department_title", "", "KeywordIndex"),
+    ("bika_setup_catalog", "department_uid", "", "KeywordIndex"),
     ("bika_setup_catalog", "getClientUID", "", "FieldIndex"),
-    ("bika_setup_catalog", "getDepartmentTitle", "", "FieldIndex"),
-    ("bika_setup_catalog", "getDocumentID", "", "FieldIndex"),
-    ("bika_setup_catalog", "getDuplicateVariation", "", "FieldIndex"),
-    ("bika_setup_catalog", "getFormula", "", "FieldIndex"),
-    ("bika_setup_catalog", "getFullname", "", "FieldIndex"),
-    ("bika_setup_catalog", "getHazardous", "", "FieldIndex"),
     ("bika_setup_catalog", "getId", "", "FieldIndex"),
-    ("bika_setup_catalog", "getInstrumentLocationName", "", "FieldIndex"),
-    ("bika_setup_catalog", "getInstrumentTitle", "", "FieldIndex"),
-    ("bika_setup_catalog", "getInstrumentType", "", "FieldIndex"),
-    ("bika_setup_catalog", "getInstrumentTypeName", "", "FieldIndex"),
     ("bika_setup_catalog", "getKeyword", "", "FieldIndex"),
-    ("bika_setup_catalog", "getManagerEmail", "", "FieldIndex"),
-    ("bika_setup_catalog", "getManagerName", "", "FieldIndex"),
-    ("bika_setup_catalog", "getManagerPhone", "", "FieldIndex"),
-    ("bika_setup_catalog", "getMaxTimeAllowed", "", "FieldIndex"),
-    ("bika_setup_catalog", "getMethodID", "", "FieldIndex"),
-    ("bika_setup_catalog", "getModel", "", "FieldIndex"),
-    ("bika_setup_catalog", "getName", "", "FieldIndex"),
-    ("bika_setup_catalog", "getPointOfCapture", "", "FieldIndex"),
-    ("bika_setup_catalog", "getPrice", "", "FieldIndex"),
-    ("bika_setup_catalog", "getSamplePointTitle", "", "KeywordIndex"),
-    ("bika_setup_catalog", "getSamplePointUID", "", "FieldIndex"),
-    ("bika_setup_catalog", "getSampleTypeTitle", "", "FieldIndex"),
-    ("bika_setup_catalog", "getSampleTypeTitles", "", "KeywordIndex"),
-    ("bika_setup_catalog", "getSampleTypeUID", "", "FieldIndex"),
-    ("bika_setup_catalog", "getServiceUID", "", "FieldIndex"),
-    ("bika_setup_catalog", "getServiceUIDs", "", "KeywordIndex"),
-    ("bika_setup_catalog", "getTotalPrice", "", "FieldIndex"),
-    ("bika_setup_catalog", "getUnit", "", "FieldIndex"),
-    ("bika_setup_catalog", "getVATAmount", "getVATAmount", "FieldIndex"),
-    ("bika_setup_catalog", "getVolume", "", "FieldIndex"),
     ("bika_setup_catalog", "id", "getId", "FieldIndex"),
+    ("bika_setup_catalog", "instrument_title", "", "KeywordIndex"),
+    ("bika_setup_catalog", "instrumenttype_title", "", "KeywordIndex"),
     ("bika_setup_catalog", "is_active", "", "BooleanIndex"),
+    ("bika_setup_catalog", "listing_searchable_text", "", "TextIndexNG3"),
+    ("bika_setup_catalog", "method_available_uid", "", "KeywordIndex"),
     ("bika_setup_catalog", "path", "getPhysicalPath", "ExtendedPathIndex"),
+    ("bika_setup_catalog", "point_of_capture", "", "FieldIndex"),
     ("bika_setup_catalog", "portal_type", "", "FieldIndex"),
+    ("bika_setup_catalog", "price", "", "FieldIndex"),
+    ("bika_setup_catalog", "price_total", "", "FieldIndex"),
     ("bika_setup_catalog", "review_state", "", "FieldIndex"),
+    ("bika_setup_catalog", "sampletype_title", "", "KeywordIndex"),
+    ("bika_setup_catalog", "sampletype_uid", "", "KeywordIndex"),
     ("bika_setup_catalog", "sortable_title", "", "FieldIndex"),
     ("bika_setup_catalog", "title", "", "FieldIndex"),
 
     ("portal_catalog", "Analyst", "", "FieldIndex"),
+    ("portal_catalog", "sample_uid", "", "KeywordIndex"),
 )
 
 COLUMNS = (
@@ -240,10 +210,10 @@ COLUMNS = (
     ("bika_catalog", "getClientTitle"),
     ("bika_catalog", "getClientID"),
     ("bika_catalog", "getClientBatchID"),
-    ("bika_catalog", "getSampleTypeTitle"),
     ("bika_catalog", "getDateReceived"),
     ("bika_catalog", "getDateSampled"),
     ("bika_catalog", "review_state"),
+    ("bika_catalog", "getProgress"),
 
     ("bika_setup_catalog", "path"),
     ("bika_setup_catalog", "UID"),
@@ -257,44 +227,18 @@ COLUMNS = (
     ("bika_setup_catalog", "sortable_title"),
     ("bika_setup_catalog", "description"),
     ("bika_setup_catalog", "review_state"),
-    ("bika_setup_catalog", "getAccredited"),
-    ("bika_setup_catalog", "getInstrumentType"),
-    ("bika_setup_catalog", "getInstrumentTypeName"),
-    ("bika_setup_catalog", "getInstrumentLocationName"),
-    ("bika_setup_catalog", "getBlank"),
-    ("bika_setup_catalog", "getCalculationTitle"),
-    ("bika_setup_catalog", "getCalculationUID"),
-    ("bika_setup_catalog", "getCalibrationExpiryDate"),
     ("bika_setup_catalog", "getCategoryTitle"),
     ("bika_setup_catalog", "getCategoryUID"),
     ("bika_setup_catalog", "getClientUID"),
-    ("bika_setup_catalog", "getDepartmentTitle"),
-    ("bika_setup_catalog", "getDuplicateVariation"),
-    ("bika_setup_catalog", "getFormula"),
-    ("bika_setup_catalog", "getFullname"),
-    ("bika_setup_catalog", "getHazardous"),
-    ("bika_setup_catalog", "getInstrumentTitle"),
     ("bika_setup_catalog", "getKeyword"),
-    ("bika_setup_catalog", "getManagerName"),
-    ("bika_setup_catalog", "getManagerPhone"),
-    ("bika_setup_catalog", "getManagerEmail"),
-    ("bika_setup_catalog", "getMaxTimeAllowed"),
-    ("bika_setup_catalog", "getModel"),
-    ("bika_setup_catalog", "getName"),
-    ("bika_setup_catalog", "getPointOfCapture"),
-    ("bika_setup_catalog", "getPrice"),
-    ("bika_setup_catalog", "getSamplePointTitle"),
-    ("bika_setup_catalog", "getSamplePointUID"),
-    ("bika_setup_catalog", "getSampleTypeTitle"),
-    ("bika_setup_catalog", "getSampleTypeUID"),
-    ("bika_setup_catalog", "getServiceUID"),
-    ("bika_setup_catalog", "getTotalPrice"),
-    ("bika_setup_catalog", "getUnit"),
-    ("bika_setup_catalog", "getVATAmount"),
-    ("bika_setup_catalog", "getVolume"),
 
     ("portal_catalog", "Analyst"),
 )
+
+ALLOWED_STYLES = [
+    "color",
+    "background-color"
+]
 
 
 def pre_install(portal_setup):
@@ -351,12 +295,17 @@ def setup_handler(context):
     setup_groups(portal)
     setup_catalog_mappings(portal)
     setup_core_catalogs(portal)
+    add_dexterity_setup_items(portal)
+    setup_html_filter(portal)
 
     # Setting up all LIMS catalogs defined in catalog folder
     setup_catalogs(portal, getCatalogDefinitions())
 
     # Run after all catalogs have been setup
     setup_auditlog_catalog(portal)
+
+    # Set CMF Form actions
+    setup_form_controller_actions(portal)
 
     logger.info("SENAITE setup handler [DONE]")
 
@@ -535,3 +484,68 @@ def setup_auditlog_catalog(portal):
             at.setCatalogsByType(portal_type, new_catalogs)
             logger.info("*** Adding catalog '{}' for '{}'".format(
                 catalog_id, portal_type))
+
+
+def setup_form_controller_actions(portal):
+    """Setup custom CMF Form actions
+    """
+    logger.info("*** Setup Form Controller custom actions ***")
+    fc_tool = api.get_tool("portal_form_controller")
+
+    # Redirect the user to Worksheets listing view after the "remove" action
+    # from inside Worksheet context is pressed
+    # https://github.com/senaite/senaite.core/pull/1480
+    fc_tool.addFormAction(
+        object_id="content_status_modify",
+        status="success",
+        context_type="Worksheet",
+        button=None,
+        action_type="redirect_to",
+        action_arg="python:object.aq_inner.aq_parent.absolute_url()")
+
+
+def add_dexterity_setup_items(portal):
+    """Adds the Dexterity Container in the Setup Folder
+
+    N.B.: We do this in code, because adding this as Generic Setup Profile in
+          `profiles/default/structure` flushes the contents on every import.
+    """
+    setup = api.get_setup()
+    pt = api.get_tool("portal_types")
+    ti = pt.getTypeInfo(setup)
+
+    # Disable content type filtering
+    ti.filter_content_types = False
+
+    # Tuples of ID, Title, FTI
+    items = [
+        ("dynamic_analysisspecs",  # ID
+         "Dynamic Analysis Specifications",  # Title
+         "DynamicAnalysisSpecs"),  # FTI
+    ]
+
+    for id, title, fti in items:
+        obj = setup.get(id)
+        if setup.get(id) is None:
+            logger.info("Adding Setup Item for '{}'".format(id))
+            setup.invokeFactory(fti, id, title=title)
+        else:
+            obj.setTitle(title)
+            obj.reindexObject()
+
+    # Enable content type filtering
+    ti.filter_content_types = True
+
+
+def setup_html_filter(portal):
+    """Setup HTML filtering for resultsinterpretations
+    """
+    logger.info("*** Setup HTML Filter ***")
+    # bypass the broken API from portal_transforms
+    adapter = IFilterSchema(portal)
+    style_whitelist = adapter.style_whitelist
+    for style in ALLOWED_STYLES:
+        logger.info("Allow style '{}'".format(style))
+        if style not in style_whitelist:
+            style_whitelist.append(style)
+    adapter.style_whitelist = style_whitelist

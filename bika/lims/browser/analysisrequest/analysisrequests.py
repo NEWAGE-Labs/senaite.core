@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
@@ -84,7 +84,8 @@ class AnalysisRequestsView(BikaListingView):
                 "sortable": True, }),
             ("Progress", {
                 "title": "Progress",
-                "sortable": False,
+                "index": "getProgress",
+                "sortable": True,
                 "toggle": True}),
             ("getId", {
                 "title": _("Sample ID"),
@@ -573,7 +574,8 @@ class AnalysisRequestsView(BikaListingView):
             item["getAnalysesNum"] = ""
 
         # Progress
-        progress_perc = self.get_progress_percentage(obj)
+        progress_perc = obj.getProgress
+        item["Progress"] = progress_perc
         item["replace"]["Progress"] = get_progress_bar_html(progress_perc)
 
         item["BatchID"] = obj.getBatchID
@@ -732,37 +734,10 @@ class AnalysisRequestsView(BikaListingView):
 
         return item
 
-    def get_progress_percentage(self, ar_brain):
-        """Returns the percentage of completeness of the Analysis Request
-        """
-        review_state = ar_brain.review_state
-        if review_state == "published":
-            return 100
-
-        numbers = ar_brain.getAnalysesNum
-
-        num_analyses = numbers[1] or 0
-        if not num_analyses:
-            return 0
-
-        # [verified, total, not_submitted, to_be_verified]
-        num_to_be_verified = numbers[3] or 0
-        num_verified = numbers[0] or 0
-
-        # 2 steps per analysis (submit, verify) plus one step for publish
-        max_num_steps = (num_analyses * 2) + 1
-        num_steps = num_to_be_verified + (num_verified * 2)
-        if not num_steps:
-            return 0
-        if num_steps > max_num_steps:
-            return 100
-        return (num_steps * 100) / max_num_steps
-
     @property
     def copy_to_new_allowed(self):
         mtool = api.get_tool("portal_membership")
-        if mtool.checkPermission(ManageAnalysisRequests, self.context) \
-                or mtool.checkPermission(ModifyPortalContent, self.context):
+        if mtool.checkPermission(AddAnalysisRequest, self.context):
             return True
         return False
 

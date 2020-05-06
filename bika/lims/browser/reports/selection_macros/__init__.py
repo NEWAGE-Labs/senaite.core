@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from Products.CMFCore.utils import getToolByName
@@ -153,14 +153,6 @@ def _cache_key_select_reference_service(method, self, style=None):
     This function returns the key used to decide if method select_reference_service has to be recomputed
     """
     key = update_timer(), style
-    return key
-
-
-def _cache_key_select_samplepoint(method, self, allow_blank=True, multiselect=False, style=None):
-    """
-    This function returns the key used to decide if method select_samplepoint has to be recomputed
-    """
-    key = update_timer(), allow_blank, multiselect, style
     return key
 
 
@@ -455,29 +447,6 @@ class SelectionMacrosView(BrowserView):
             res['contentFilter'] = (field_id, val)
             res['parms'] = {'title': _('State'), 'value': state_title}
             res['titles'] = state_title
-            return res
-
-    select_samplepoint_pt = ViewPageTemplateFile("select_samplepoint.pt")
-
-    @ram.cache(_cache_key_select_samplepoint)
-    def select_samplepoint(self, allow_blank=True, multiselect=False, style=None):
-        self.style = style
-        self.allow_blank = allow_blank
-        self.multiselect = multiselect
-        self.samplepoints = self.bsc(portal_type='SamplePoint',
-                                     is_active=True,
-                                     sort_on='sortable_title')
-        return self.select_samplepoint_pt()
-
-    def parse_samplepoint(self, request):
-        val = request.form.get("SamplePointUID", "")
-        if val:
-            obj = val and self.rc.lookupObject(val)
-            title = obj.Title()
-            res = {}
-            res['contentFilter'] = ('getSamplePointUID', val)
-            res['parms'] = {'title': _("Sample Point"), 'value': title}
-            res['titles'] = title
             return res
 
     select_sampletype_pt = ViewPageTemplateFile("select_sampletype.pt")

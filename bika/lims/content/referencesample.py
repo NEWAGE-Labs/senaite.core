@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 """ReferenceSample represents a reference sample used for quality control testing
@@ -100,13 +100,13 @@ schema = BikaSchema.copy() + Schema((
             label=_("Lot Number"),
         ),
     ),
-    RemarksField(
-        'Remarks',
-        schemata='Description',
-        searchable=True,
-        widget=RemarksWidget(
+    TextField(
+        "Remarks",
+        allowable_content_types=("text/plain",),
+        schemata="Description",
+        widget=TextAreaWidget(
             label=_("Remarks"),
-        ),
+        )
     ),
     DateTimeField('DateSampled',
         schemata = 'Dates',

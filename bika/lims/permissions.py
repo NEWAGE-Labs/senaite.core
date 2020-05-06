@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 """
@@ -81,8 +81,6 @@ AddSampleMatrix = "senaite.core: Add SampleMatrix"
 AddSamplePoint = "senaite.core: Add SamplePoint"
 AddSampleType = "senaite.core: Add SampleType"
 AddSamplingDeviation = "senaite.core: Add SamplingDeviation"
-AddSamplingRound = "senaite.core: Add SamplingRound"
-AddSRTemplate = "senaite.core: Add SRTemplate"
 AddStorageLocation = "senaite.core: Add StorageLocation"
 AddSubGroup = "senaite.core: Add SubGroup"
 AddSupplier = "senaite.core: Add Supplier"
@@ -118,10 +116,6 @@ TransitionScheduleSampling = "senaite.core: Transition: Schedule Sampling"
 
 # Transition permissions (Supply Order)
 TransitionDispatchOrder = "senaite.core: Transition: Dispatch Order"
-
-# Transition permissions (Sampling Round)
-TransitionCloseSamplingRound = "senaite.core: Transition: Close Sampling Round"
-TransitionReopenSamplingRound = "senaite.core: Transition: Reopen Sampling Round"
 
 # Transition permissions (Worksheet)
 TransitionRejectWorksheet = "senaite.core: Transition: Reject Worksheet"
@@ -160,7 +154,6 @@ FieldEditSampleType = "senaite.core: Field: Edit Sample Type"
 FieldEditSampler = "senaite.core: Field: Edit Sampler"
 FieldEditSamplingDate = "senaite.core: Field: Edit Sampling Date"
 FieldEditSamplingDeviation = "senaite.core: Field: Edit Sampling Deviation"
-FieldEditSamplingRound = "senaite.core: Field: Edit Sampling Round"
 FieldEditScheduledSampler = "senaite.core: Field: Edit Scheduled Sampler"
 FieldEditSpecification = "senaite.core: Field: Edit Specification"
 FieldEditStorageLocation = "senaite.core: Field: Edit Storage Location"
@@ -181,7 +174,6 @@ EditResults = "senaite.core: Edit Results"
 EditWorksheet = "senaite.core: Edit Worksheet"
 ManageBika = "senaite.core: Manage Bika"
 ManageAnalysisRequests = "senaite.core: Manage Analysis Requests"
-ManageARImport = "senaite.core: Manage ARImport"
 ManageInvoices = "senaite.core: Manage Invoices"
 ManageLoginDetails = "senaite.core: Manage Login Details"
 ManageReference = "senaite.core: Manage Reference"

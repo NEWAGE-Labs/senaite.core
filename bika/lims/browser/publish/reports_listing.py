@@ -15,10 +15,11 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import collections
+import re
 
 from bika.lims import api
 from bika.lims import bikaMessageFactory as _BMF
@@ -67,7 +68,7 @@ class ReportsListingView(BikaListingView):
             "This will also publish the contained samples of the reports "
             "after the email was successfully sent.")
 
-        send_email_transition = {
+        self.send_email_transition = {
             "id": "send_email",
             "title": _("Email"),
             "url": "email",
@@ -78,7 +79,7 @@ class ReportsListingView(BikaListingView):
         help_publish_text = _(
             "Manually publish all contained samples of the selected reports.")
 
-        publish_samples_transition = {
+        self.publish_samples_transition = {
             "id": "publish_samples",
             "title": _("Publish"),
             # see senaite.core.browser.workflow
@@ -115,8 +116,8 @@ class ReportsListingView(BikaListingView):
                 "contentFilter": {},
                 "columns": self.columns.keys(),
                 "custom_transitions": [
-                    send_email_transition,
-                    publish_samples_transition,
+                    self.send_email_transition,
+                    self.publish_samples_transition,
                 ]
             },
         ]
@@ -242,7 +243,7 @@ class ReportsListingView(BikaListingView):
         # CC Contacts
         cc = filter(None, map(recipient_from_contact, ar.getCCContact()))
         # CC Emails
-        cc_emails = map(lambda x: x.strip(), ar.getCCEmails().split(","))
+        cc_emails = ar.getCCEmails(as_list=True)
         cc_emails = filter(None, map(recipient_from_email, cc_emails))
 
         return to + cc + cc_emails

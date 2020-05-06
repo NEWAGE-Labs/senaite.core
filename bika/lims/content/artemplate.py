@@ -15,22 +15,13 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2019 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import sys
 
 from AccessControl import ClassSecurityInfo
-from bika.lims import api
-from bika.lims import bikaMessageFactory as _
-from bika.lims.browser.fields.remarksfield import RemarksField
-from bika.lims.browser.widgets import ARTemplateAnalysesWidget
-from bika.lims.browser.widgets import ARTemplatePartitionsWidget
-from bika.lims.browser.widgets import ReferenceWidget
-from bika.lims.browser.widgets import RemarksWidget
-from bika.lims.config import PROJECTNAME
-from bika.lims.content.bikaschema import BikaSchema
-from bika.lims.interfaces import IARTemplate, IDeactivable
+from Products.ATExtensions.field.records import RecordsField
 from Products.Archetypes.public import BaseContent
 from Products.Archetypes.public import BooleanField
 from Products.Archetypes.public import BooleanWidget
@@ -39,11 +30,24 @@ from Products.Archetypes.public import ComputedWidget
 from Products.Archetypes.public import DisplayList
 from Products.Archetypes.public import ReferenceField
 from Products.Archetypes.public import Schema
+from Products.Archetypes.public import TextAreaWidget
+from Products.Archetypes.public import TextField
 from Products.Archetypes.public import registerType
 from Products.Archetypes.references import HoldingReference
-from Products.ATExtensions.field.records import RecordsField
 from Products.CMFCore.utils import getToolByName
 from zope.interface import implements
+
+from bika.lims import api
+from bika.lims import bikaMessageFactory as _
+from bika.lims.browser.widgets import ARTemplateAnalysesWidget
+from bika.lims.browser.widgets import ARTemplatePartitionsWidget
+from bika.lims.browser.widgets import ReferenceWidget
+from bika.lims.config import PROJECTNAME
+from bika.lims.content.bikaschema import BikaSchema
+from bika.lims.content.clientawaremixin import ClientAwareMixin
+from bika.lims.content.sampletype import SampleTypeAwareMixin
+from bika.lims.interfaces import IARTemplate
+from bika.lims.interfaces import IDeactivable
 
 schema = BikaSchema.copy() + Schema((
     ReferenceField(
@@ -95,13 +99,6 @@ schema = BikaSchema.copy() + Schema((
             showOn=True,
         ),
     ),
-    ComputedField(
-        "SampleTypeUID",
-        expression="context.Schema()['SampleType'].get(context) and context.Schema()['SampleType'].get(context).UID() or ''",
-        widget=ComputedWidget(
-            visible=False,
-        ),
-    ),
     BooleanField(
         "Composite",
         default=False,
@@ -118,12 +115,12 @@ schema = BikaSchema.copy() + Schema((
             description=_("Enable sampling workflow for the created sample")
         ),
     ),
-    RemarksField(
+    TextField(
         "Remarks",
-        searchable=True,
-        widget=RemarksWidget(
+        allowable_content_types=("text/plain",),
+        widget=TextAreaWidget(
             label=_("Remarks"),
-        ),
+        )
     ),
     RecordsField(
         "Partitions",
@@ -299,7 +296,7 @@ schema["title"].validators = ("uniquefieldvalidator",)
 schema["title"]._validationLayer()
 
 
-class ARTemplate(BaseContent):
+class ARTemplate(BaseContent, ClientAwareMixin, SampleTypeAwareMixin):
     security = ClassSecurityInfo()
     schema = schema
     displayContentsTab = False
@@ -325,13 +322,6 @@ class ARTemplate(BaseContent):
             items.append((p.UID(), title))
         items = [["", ""]] + list(items)
         return DisplayList(items)
-
-    def getClientUID(self):
-        """This populates the getClientUID catalog
-        If the parent is the system bika_artemplates folder,
-        then that folder's UID must be returned in this index.
-        """
-        return self.aq_parent.UID()
 
     def getAnalysisServiceSettings(self, uid):
         """Returns a dictionary with the settings for the analysis service that
