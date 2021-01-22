@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2021 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -37,6 +37,7 @@ from zope.interface import implements
 from bika.lims import _
 from bika.lims import api
 from bika.lims.browser.fields import EmailsField
+from bika.lims.browser.fields import UIDReferenceField
 from bika.lims.browser.widgets import ReferenceWidget
 from bika.lims.catalog.bikasetup_catalog import SETUP_CATALOG
 from bika.lims.config import DECIMAL_MARKS
@@ -53,23 +54,67 @@ schema = Organisation.schema.copy() + Schema((
         searchable=True,
         validators=("uniquefieldvalidator", "standard_id_validator"),
         widget=StringWidget(
-            label=_("Client ID"),
+            label=_("NAL #"),
         ),
     ),
 
     BooleanField(
         "BulkDiscount",
         default=False,
+        visible=False,
         widget=BooleanWidget(
             label=_("Bulk discount applies"),
+            visible=False,
         ),
     ),
 
     BooleanField(
         "MemberDiscountApplies",
         default=False,
+        visible=False,
         widget=BooleanWidget(
             label=_("Member discount applies"),
+            visible=False,
+        ),
+    ),
+#Custom Fields
+    StringField(
+        "MBGGrowerNumber",
+        widget=StringWidget(
+            label=_("MBG Grower Number"),
+        ),
+    ),
+
+    StringField(
+        "TBGrowerNumber",
+        widget=StringWidget(
+            label=_("True Blue Grower Number"),
+        ),
+    ),
+
+    UIDReferenceField(
+        'GrowerList',
+        multiValued=1,
+        allowed_types=('Client',),
+        mode="rw",
+        widget=ReferenceWidget(
+            label=_("List of Growers"),
+            description=_("A list of associated clients for Consults and Distributors."),
+            size=20,
+            catalog_name="portal_catalog",
+            base_query={"is_active": True,
+                        "sort_limit": 30,
+                        "sort_on": "sortable_title",
+                        "sort_order": "ascending"},
+            showOn=True,
+            popup_width='400px',
+            colModel=[
+                {'columnName': 'Name', 'width': '50',
+                 'label': _('Name')},
+                {'columnName': 'ClientID', 'width': '50',
+                 'label': _('Email Address')},
+            ],
+            ui_item='Name',
         ),
     ),
 
@@ -266,6 +311,20 @@ class Client(Organisation):
                 raise Unauthorized, (
                     "Do not have permissions to remove this object")
         return PortalFolder.manage_delObjects(self, ids, REQUEST=REQUEST)
+#Custom function for contacts
+    security.declarePublic('getContactUIDForUser')
+
+    def getContactUIDForUser(self):
+        """get the UID of the contact associated with the authenticated user
+        """
+        mt = getToolByName(self, 'portal_membership')
+        user = mt.getAuthenticatedMember()
+        user_id = user.getUserName()
+        pc = getToolByName(self, 'portal_catalog')
+        r = pc(portal_type='Contact',
+               getUsername=user_id)
+        if len(r) == 1:
+            return r[0].UID
 
 
 schemata.finalizeATCTSchema(schema, folderish=True, moveDiscussion=False)

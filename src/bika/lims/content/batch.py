@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2018-2021 by it's authors.
+# Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -23,6 +23,7 @@ from bika.lims import api
 from bika.lims import bikaMessageFactory as _
 from bika.lims import deprecated
 from bika.lims.browser.fields.remarksfield import RemarksField
+from bika.lims.browser.fields import UIDReferenceField
 from bika.lims.browser.widgets import DateTimeWidget
 from bika.lims.browser.widgets import ReferenceWidget
 from bika.lims.browser.widgets import RemarksWidget
@@ -44,6 +45,9 @@ from Products.Archetypes.public import Schema
 from Products.Archetypes.public import StringField
 from Products.Archetypes.public import StringWidget
 from Products.Archetypes.public import registerType
+from Products.Archetypes.atapi import FileField
+from Products.Archetypes.atapi import FileWidget
+from Products.Archetypes.references import HoldingReference
 from Products.CMFCore.utils import getToolByName
 from zope.interface import implements
 
@@ -64,7 +68,7 @@ schema = BikaFolderSchema.copy() + Schema((
             #     invisible (see custom getBatchID getter method)
             # => we should remove that field
             visible=False,
-            label=_("Batch ID"),
+            label=_("SDG ID"),
         )
     ),
 
@@ -87,11 +91,101 @@ schema = BikaFolderSchema.copy() + Schema((
         ),
     ),
 
+    UIDReferenceField(
+        'ProjectContact',
+        default_method='getContactUIDForUser',
+        allowed_types=('Contact',),
+        referenceClass=HoldingReference,
+        mode="rw",
+        widget=ReferenceWidget(
+            label=_("Project Contact"),
+            size=20,
+            helper_js=("bika_widgets/referencewidget.js",
+                       "++resource++bika.lims.js/contact.js"),
+            description=_("The main contact for the project"),
+            catalog_name="portal_catalog",
+            base_query={"is_active": True,
+                        "sort_limit": 50,
+                        "sort_on": "sortable_title",
+                        "sort_order": "ascending"},
+            showOn=True,
+            popup_width='400px',
+            colModel=[
+                {'columnName': 'Fullname', 'width': '50',
+                 'label': _('Name')},
+                {'columnName': 'EmailAddress', 'width': '50',
+                 'label': _('Email Address')},
+            ],
+            ui_item='Fullname',
+        ),
+    ),
+
+    UIDReferenceField(
+        'ReportContact',
+        default_method='getContactUIDForUser',
+        allowed_types=('Contact',),
+        referenceClass=HoldingReference,
+        mode="rw",
+        widget=ReferenceWidget(
+            label=_("Report Contact"),
+            size=20,
+            helper_js=("bika_widgets/referencewidget.js",
+                       "++resource++bika.lims.js/contact.js"),
+            description=_("Optional field. Recipient of results if different than the Project Contact."),
+            catalog_name="portal_catalog",
+            base_query={"is_active": True,
+                        "sort_limit": 50,
+                        "sort_on": "sortable_title",
+                        "sort_order": "ascending"},
+            showOn=True,
+            popup_width='400px',
+            colModel=[
+                {'columnName': 'Fullname', 'width': '50',
+                 'label': _('Name')},
+                {'columnName': 'EmailAddress', 'width': '50',
+                 'label': _('Email Address')},
+            ],
+            ui_item='Fullname',
+        ),
+    ),
+
+    UIDReferenceField(
+        'SamplerContact',
+        default_method='getContactUIDForUser',
+        allowed_types=('Contact',),
+        referenceClass=HoldingReference,
+        mode="rw",
+        widget=ReferenceWidget(
+            label=_("Sampled By"),
+            size=20,
+            helper_js=("bika_widgets/referencewidget.js",
+                       "++resource++bika.lims.js/contact.js"),
+            description=_("The person receiving the results directly."),
+            catalog_name="portal_catalog",
+            base_query={"is_active": True,
+                        "sort_limit": 50,
+                        "sort_on": "sortable_title",
+                        "sort_order": "ascending"},
+            showOn=True,
+            popup_width='400px',
+            colModel=[
+                {'columnName': 'Fullname', 'width': '50',
+                 'label': _('Name')},
+                {'columnName': 'EmailAddress', 'width': '50',
+                 'label': _('Email Address')},
+            ],
+            ui_item='Fullname',
+        ),
+    ),
+
+
     StringField(
         'ClientBatchID',
         required=0,
+        visible=False,
         widget=StringWidget(
-            label=_("Client Batch ID")
+            label=_("Client Batch ID "),
+            visible=False,
         )
     ),
 
@@ -103,12 +197,22 @@ schema = BikaFolderSchema.copy() + Schema((
         ),
     ),
 
+    #Custom field
+    FileField(
+        'COC',
+        #label="Scanned COC",
+        widget=FileWidget(
+            label=_("Scanned COC"),
+            description=_("Attach a scanned COC"),
+        )
+    ),
+
     LinesField(
         'BatchLabels',
         vocabulary="BatchLabelVocabulary",
         accessor="getLabelNames",
         widget=MultiSelectionWidget(
-            label=_("Batch Labels"),
+            label=_("SDG Labels"),
             format="checkbox",
         )
     ),
@@ -117,25 +221,30 @@ schema = BikaFolderSchema.copy() + Schema((
         'Remarks',
         widget=RemarksWidget(
             label=_('Remarks'),
+            description=_("Remarks are used as unchangable comments by users."),
         )
     ),
+
 ))
 
 # Remove implicit `uniquefieldvalidator` coming from `BikaFolderSchema`
 schema['title'].validators = ()
-schema['title'].widget.description = _("If no value is entered, the Batch ID"
-                                       " will be auto-generated.")
+schema['title'].widget.description = _("")
 schema['title'].required = False
 schema['title'].widget.visible = True
-schema['title'].widget.description = _("If no Title value is entered,"
-                                       " the Batch ID will be used.")
+schema['title'].widget.label = "Project Title"
 schema['description'].required = False
 schema['description'].widget.visible = True
+schema['description'].widget.description = _("Add any addition notes or details about the SDG")
+schema['description'].widget.label = "SDG Notes"
 
-schema.moveField('ClientBatchID', before='description')
+#schema.moveField('ClientBatchID', before='description')
 schema.moveField('BatchID', before='description')
 schema.moveField('title', before='description')
 schema.moveField('Client', after='title')
+schema.moveField('ProjectContact', after='Client')
+schema.moveField('ReportContact', after='ProjectContact')
+schema.moveField('SamplerContact', after='ReportContact')
 
 
 class Batch(ATFolder, ClientAwareMixin):
@@ -255,6 +364,20 @@ class Batch(ATFolder, ClientAwareMixin):
             sample_progresses = map(lambda s: s.getProgress(), samples)
             total_progress = sum(sample_progresses) / total
         return total_progress
+#Custom function for contacts
+    security.declarePublic('getContactUIDForUser')
+
+    def getContactUIDForUser(self):
+        """get the UID of the contact associated with the authenticated user
+        """
+        mt = getToolByName(self, 'portal_membership')
+        user = mt.getAuthenticatedMember()
+        user_id = user.getUserName()
+        pc = getToolByName(self, 'portal_catalog')
+        r = pc(portal_type='Contact',
+               getUsername=user_id)
+        if len(r) == 1:
+            return r[0].UID
 
 
 registerType(Batch, PROJECTNAME)
