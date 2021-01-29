@@ -40,6 +40,7 @@ from bika.lims import _
 from bika.lims import api
 from bika.lims.browser.fields import EmailsField
 from bika.lims.browser.widgets import ReferenceWidget
+from bika.lims.browser.fields import UIDReferenceField
 from bika.lims.catalog.bikasetup_catalog import SETUP_CATALOG
 from bika.lims.config import DECIMAL_MARKS
 from bika.lims.config import PROJECTNAME
@@ -55,7 +56,8 @@ schema = Organisation.schema.copy() + Schema((
         searchable=True,
         validators=("uniquefieldvalidator", "standard_id_validator"),
         widget=StringWidget(
-            label=_("Client ID"),
+            label=_("NAL Number"),
+            description="Must be unique"
         ),
     ),
 
@@ -64,6 +66,7 @@ schema = Organisation.schema.copy() + Schema((
         default=False,
         widget=BooleanWidget(
             label=_("Bulk discount applies"),
+            visible=False,
         ),
     ),
 
@@ -72,6 +75,7 @@ schema = Organisation.schema.copy() + Schema((
         default=False,
         widget=BooleanWidget(
             label=_("Member discount applies"),
+            visible=False,
         ),
     ),
 
@@ -154,6 +158,35 @@ schema = Organisation.schema.copy() + Schema((
                 "Decimal mark to use in the reports from this Client."),
             format="select",
         )
+    ),
+    StringField(
+        "MBGNum",
+        widget=StringWidget(
+            label=_("MBG Grower #"),
+        ),
+    ),
+    StringField(
+        "TBNum",
+        widget=StringWidget(
+            label=_("TrueBlue Grower #"),
+        ),
+    ),
+    UIDReferenceField(
+        "Growers",
+        multiValued=1,
+        allowed_types=("Client",),
+        relationship="ClientDistributor",
+        widget=ReferenceWidget(
+            label=_("Associated Growers"),
+            description=_("Other Clients associated with this one for disributing or consulting purposes."),
+            showOn=True,
+            catalog_name='portal_catalog',
+            base_query=dict(
+                is_active=True,
+                sort_on="sortable_title",
+                sort_order="ascending",
+            ),
+        ),
     ),
 ))
 

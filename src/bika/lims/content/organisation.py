@@ -50,6 +50,7 @@ schema = BikaFolderSchema.copy() + BikaSchema.copy() + ManagedSchema((
         "TaxNumber",
         widget=StringWidget(
             label=_("VAT number"),
+            visible=False,
         ),
     ),
 
@@ -64,6 +65,7 @@ schema = BikaFolderSchema.copy() + BikaSchema.copy() + ManagedSchema((
         "Fax",
         widget=StringWidget(
             label=_("Fax"),
+            visible=False,
         ),
     ),
 
@@ -71,7 +73,7 @@ schema = BikaFolderSchema.copy() + BikaSchema.copy() + ManagedSchema((
         "EmailAddress",
         schemata="Address",
         widget=StringWidget(
-            label=_("Email Address"),
+            label=_("Company Email Address"),
         ),
         validators=("isEmail", )
     ),

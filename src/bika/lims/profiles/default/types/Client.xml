@@ -105,7 +105,7 @@
     <permission value="View"/>
   </action>
 
-  <action title="Sample Templates"
+  <!-- <action title="Sample Templates"
           action_id="templates"
           category="object"
           condition_expr=""
@@ -115,7 +115,7 @@
           i18n:attributes="title"
           visible="True">
     <permission value="View"/>
-  </action>
+  </action> -->
 
   <action title="Analysis Specifications"
           action_id="specs"
