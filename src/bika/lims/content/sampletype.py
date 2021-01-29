@@ -112,10 +112,10 @@ class SampleTypeAwareMixin(BaseObject):
 
 schema = BikaSchema.copy() + Schema((
     DurationField('RetentionPeriod',
-        required = 1,
         default_method = 'getDefaultLifetime',
         widget = DurationWidget(
             label=_("Retention Period"),
+            visible=False,
             description =_(
                 "The period for which un-preserved samples of this type can be kept before "
                 "they expire and cannot be analysed any further"),
@@ -126,6 +126,7 @@ schema = BikaSchema.copy() + Schema((
         widget = BooleanWidget(
             label=_("Hazardous"),
             description=_("Samples of this type should be treated as hazardous"),
+            visible=False,
         ),
     ),
     ReferenceField('SampleMatrix',
@@ -137,18 +138,18 @@ schema = BikaSchema.copy() + Schema((
         widget = ReferenceWidget(
             checkbox_bound = 0,
             label=_("Sample Matrix"),
+            visible=False,
         ),
     ),
     StringField('Prefix',
-        required = True,
         validators=('no_white_space_validator'),
         widget = StringWidget(
             label=_("Sample Type Prefix"),
             description=_("Prefixes can not contain spaces."),
+            visible=False,
         ),
     ),
     StringField('MinimumVolume',
-        required = 1,
         widget = StringWidget(
             label=_("Minimum Volume"),
             description=_("The minimum sample volume required for analysis eg. '10 ml' or '1 kg'."),
@@ -162,6 +163,7 @@ schema = BikaSchema.copy() + Schema((
         widget = ReferenceWidget(
             checkbox_bound = 0,
             label=_("Default Container Type"),
+            visible=False,
             description =_(
                 "The default container type. New sample partitions "
                 "are automatically assigned a container of this "
@@ -205,6 +207,7 @@ schema = BikaSchema.copy() + Schema((
         fixedSize=1,
         widget=SampleTypeStickersWidget(
             label=_("Admitted sticker templates"),
+            visible=False,
             description=_(
                 "Defines the stickers to use for this sample type."),
             allowDelete=False,
