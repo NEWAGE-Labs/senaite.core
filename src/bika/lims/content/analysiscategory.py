@@ -55,7 +55,6 @@ Comments = TextField(
 
 Department = ReferenceField(
     "Department",
-    required=1,
     allowed_types=("Department",),
     relationship="AnalysisCategoryDepartment",
     referenceClass=HoldingReference,
@@ -69,6 +68,7 @@ Department = ReferenceField(
             "sort_on": "sortable_title",
             "sort_order": "ascending"
         },
+        visible=False,
     )
 )
 
