@@ -36,10 +36,13 @@ from plone.app.blob.field import FileField as BlobFileField
 from zope.interface import implements
 
 from bika.lims import bikaMessageFactory as _
+from Products.Archetypes.Widget import SelectionWidget
 from bika.lims.browser.fields import CoordinateField
 from bika.lims.browser.fields import DurationField
 from bika.lims.browser.widgets import CoordinateWidget
 from bika.lims.browser.widgets import DurationWidget
+from bika.lims.browser.fields import AddressField
+from bika.lims.browser.widgets import AddressWidget
 from bika.lims.browser.widgets.referencewidget import \
     ReferenceWidget as BikaReferenceWidget
 from bika.lims.config import PROJECTNAME
@@ -54,6 +57,7 @@ schema = BikaSchema.copy() + Schema((
         schemata='Location',
         widget=CoordinateWidget(
             label=_("Latitude"),
+            visible=False,
             description=_("Enter the Sample Point's latitude in degrees 0-90, minutes 0-59, seconds 0-59 and N/S indicator"),
         ),
     ),
@@ -63,6 +67,7 @@ schema = BikaSchema.copy() + Schema((
         schemata='Location',
         widget=CoordinateWidget(
             label=_("Longitude"),
+            visible=False,
             description=_("Enter the Sample Point's longitude in degrees 0-180, minutes 0-59, seconds 0-59 and E/W indicator"),
         ),
     ),
@@ -72,6 +77,7 @@ schema = BikaSchema.copy() + Schema((
         schemata='Location',
         widget=StringWidget(
             label=_("Elevation"),
+            visible=False,
             description=_("The height or depth at which the sample has to be taken"),
         ),
     ),
@@ -82,6 +88,7 @@ schema = BikaSchema.copy() + Schema((
         widget=DurationWidget(
             label=_("Sampling Frequency"),
             description=_("If a sample is taken periodically at this sample point, enter frequency here, e.g. weekly"),
+            visible=False,
         ),
     ),
 
@@ -103,12 +110,33 @@ schema = BikaSchema.copy() + Schema((
             showOn=True,
         ),
     ),
+    StringField(
+        "FormattedAddress",
+        searchable=True,
+        validators=("uniquefieldvalidator", "standard_id_validator"),
+        widget=StringWidget(
+            label=_("Formatted Address"),
+            description="Write the address the exact way it should appear on the report"
+        ),
+    ),
+    StringField(
+        "MBGType",
+        widget=SelectionWidget(
+            label="MBG Location Type",
+            format="radio",
+            choice={
+                "River":"River",
+                "Pond":"Pond"
+            }
+        )
+    ),
 
     BooleanField(
         'Composite',
         default=False,
         widget=BooleanWidget(
             label=_("Composite"),
+            visible=False,
             description=_(
                 "Check this box if the samples taken at this point are 'composite' "
                 "and put together from more than one sub sample, e.g. several surface "
@@ -127,6 +155,8 @@ schema = BikaSchema.copy() + Schema((
 
 schema['description'].widget.visible = True
 schema['description'].schemata = 'default'
+schema['description'].description = 'Additional information about the sample point'
+schema['title'].description = "A name for the sample location"
 
 
 class SamplePoint(BaseContent, HistoryAwareMixin, ClientAwareMixin,
