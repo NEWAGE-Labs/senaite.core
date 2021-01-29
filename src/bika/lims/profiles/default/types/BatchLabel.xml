@@ -4,7 +4,7 @@
         xmlns:i18n="http://xml.zope.org/namespaces/i18n"
         i18n:domain="plone"
         purge="True">
- <property name="title" i18n:translate="">Batch Label</property>
+ <property name="title" i18n:translate="">SDG Label</property>
  <property name="description"></property>
  <property name="content_icon">senaite_theme/icon/batchlabel</property>
  <property name="content_meta_type">BatchLabel</property>

@@ -69,7 +69,7 @@
     <permission value="View"/>
   </action>
 
-  <action title="Batches"
+  <action title="SDGs"
           action_id="batches"
           category="object"
           condition_expr=""

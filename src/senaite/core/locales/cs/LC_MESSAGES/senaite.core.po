@@ -763,7 +763,7 @@ msgstr "ID Dávky"
 
 #: bika/lims/content/batch.py:115
 #: bika/lims/controlpanel/bika_batchlabels.py:45
-msgid "Batch Labels"
+msgid "SDG Labels"
 msgstr "Dávkové štítky"
 
 #: bika/lims/content/analysisrequest.py:345

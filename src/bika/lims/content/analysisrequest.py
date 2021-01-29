@@ -304,9 +304,9 @@ schema = BikaSchema.copy() + Schema((
         read_permission=View,
         write_permission=FieldEditBatch,
         widget=ReferenceWidget(
-            label=_("Batch"),
+            label=_("SDG"),
             size=20,
-            description=_("The assigned batch of this request"),
+            description=_("The SDG the sample came in on."),
             render_own_label=True,
             visible={
                 'add': 'edit',
@@ -319,11 +319,11 @@ schema = BikaSchema.copy() + Schema((
                         "sort_order": "descending"},
             colModel=[
                 {'columnName': 'getId', 'width': '20',
-                 'label': _('Batch ID'), 'align': 'left'},
+                 'label': _('SDG ID'), 'align': 'left'},
                 {'columnName': 'Title', 'width': '20',
                  'label': _('Title'), 'align': 'left'},
-                {'columnName': 'getClientBatchID', 'width': '20',
-                 'label': _('CBID'), 'align': 'left'},
+                # {'columnName': 'getClientBatchID', 'width': '20',
+                #  'label': _('CBID'), 'align': 'left'},
                 {'columnName': 'getClientTitle', 'width': '30',
                  'label': _('Client'), 'align': 'left'},
             ],
@@ -343,8 +343,8 @@ schema = BikaSchema.copy() + Schema((
         read_permission=View,
         write_permission=FieldEditBatch,
         widget=ReferenceWidget(
-            label=_("Batch Sub-group"),
-            description=_("The assigned batch sub group of this request"),
+            label=_("Sample Delivery Sub-Group"),
+            description=_("Sub-Groups of samples in the SDG. Used to *Pair* Sap samples."),
             size=20,
             render_own_label=True,
             visible={

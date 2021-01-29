@@ -763,7 +763,7 @@ msgstr "ID Lot"
 
 #: bika/lims/content/batch.py:115
 #: bika/lims/controlpanel/bika_batchlabels.py:45
-msgid "Batch Labels"
+msgid "SDG Labels"
 msgstr "Etiquetes per a lots"
 
 #: bika/lims/content/analysisrequest.py:345

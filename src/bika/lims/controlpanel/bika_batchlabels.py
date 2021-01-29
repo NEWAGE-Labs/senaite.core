@@ -52,7 +52,7 @@ class BatchLabelsView(BikaListingView):
                 "icon": "++resource++bika.lims.images/add.png"}
         }
 
-        self.title = self.context.translate(_("Batch Labels"))
+        self.title = self.context.translate(_("SDG Labels"))
         self.icon = "{}/{}".format(
             self.portal_url,
             "/++resource++bika.lims.images/batchlabel_big.png"

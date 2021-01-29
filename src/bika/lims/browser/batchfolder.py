@@ -53,7 +53,7 @@ class BatchFolderContentsView(BikaListingView):
 
         batch_image_path = "/++resource++bika.lims.images/batch_big.png"
         self.icon = "{}{}".format(self.portal_url, batch_image_path)
-        self.title = self.context.translate(_("Batches"))
+        self.title = self.context.translate(_("SDGs"))
         self.description = ""
 
         self.columns = collections.OrderedDict((
@@ -66,7 +66,7 @@ class BatchFolderContentsView(BikaListingView):
                 "sortable": True,
                 "toggle": True}),
             ("BatchID", {
-                "title": _("Batch ID"),
+                "title": _("SDG ID"),
                 "index": "getId", }),
             ("Description", {
                 "title": _("Description"),
@@ -79,9 +79,9 @@ class BatchFolderContentsView(BikaListingView):
             ("ClientID", {
                 "title": _("Client ID"),
                 "index": "getClientID", }),
-            ("ClientBatchID", {
-                "title": _("Client Batch ID"),
-                "index": "getClientBatchID", }),
+            # ("ClientBatchID", {
+            #     "title": _("Client Batch ID"),
+            #     "index": "getClientBatchID", }),
             ("state_title", {
                 "title": _("State"),
                 "sortable": False, }),

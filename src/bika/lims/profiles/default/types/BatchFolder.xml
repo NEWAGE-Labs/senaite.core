@@ -5,7 +5,7 @@
         i18n:domain="plone"
         purge="True">
 
- <property name="title" i18n:translate="">Batches</property>
+ <property name="title" i18n:translate="">SDGs</property>
  <property name="description"></property>
  <property name="content_icon">senaite_theme/icon/batch</property>
  <property name="content_meta_type">BatchFolder</property>

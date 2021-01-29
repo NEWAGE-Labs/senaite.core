@@ -762,8 +762,8 @@ msgstr "Batch ID"
 
 #: bika/lims/content/batch.py:115
 #: bika/lims/controlpanel/bika_batchlabels.py:45
-msgid "Batch Labels"
-msgstr "Batch Labels"
+msgid "SDG Labels"
+msgstr "SDG Labels"
 
 #: bika/lims/content/analysisrequest.py:345
 msgid "Batch Sub-group"

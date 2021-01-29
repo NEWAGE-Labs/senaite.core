@@ -606,7 +606,7 @@ msgstr "Batch Etikett"
 #: bika/lims/content/batch.py:115
 #: bika/lims/controlpanel/bika_batchlabels.py:45
 #: bika/lims/profiles/default/controlpanel.xml
-msgid "Batch Labels"
+msgid "SDG Labels"
 msgstr "Batch Etiketten"
 
 #: bika/lims/content/analysisrequest.py:345
