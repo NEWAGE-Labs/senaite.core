@@ -139,7 +139,6 @@ schema = BikaSchema.copy() + Schema((
 
     UIDReferenceField(
         'Contact',
-        required=1,
         default_method='getContactUIDForUser',
         allowed_types=('Contact',),
         mode="rw",
@@ -154,10 +153,6 @@ schema = BikaSchema.copy() + Schema((
             description=_("The primary contact of this sample, "
                           "who will receive notifications and publications "
                           "via email"),
-            visible={
-                'add': 'edit',
-                'header_table': 'prominent',
-            },
             catalog_name="portal_catalog",
             base_query={"is_active": True,
                         "sort_limit": 50,
@@ -172,6 +167,7 @@ schema = BikaSchema.copy() + Schema((
                  'label': _('Email Address')},
             ],
             ui_item='Fullname',
+            visible=False,
         ),
     ),
 
@@ -190,10 +186,6 @@ schema = BikaSchema.copy() + Schema((
             description=_("The contacts used in CC for email notifications"),
             render_own_label=True,
             size=20,
-            visible={
-                'add': 'edit',
-                'header_table': 'prominent',
-            },
             catalog_name="portal_catalog",
             base_query={"is_active": True,
                         "sort_on": "sortable_title",
@@ -207,6 +199,7 @@ schema = BikaSchema.copy() + Schema((
                  'label': _('Email Address')},
             ],
             ui_item='Fullname',
+            visible=False,
         ),
     ),
 
@@ -269,10 +262,6 @@ schema = BikaSchema.copy() + Schema((
             description=_("Select a sample to create a secondary Sample"),
             size=20,
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'header_table': 'prominent',
-            },
             catalog_name=CATALOG_ANALYSIS_REQUEST_LISTING,
             search_fields=('listing_searchable_text',),
             base_query={'is_active': True,
@@ -293,6 +282,7 @@ schema = BikaSchema.copy() + Schema((
             ],
             ui_item='getId',
             showOn=True,
+            visible=False,
         )
     ),
 
@@ -380,15 +370,12 @@ schema = BikaSchema.copy() + Schema((
                           "in the request"),
             size=20,
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'secondary': 'disabled',
-            },
             catalog_name='bika_setup_catalog',
             base_query={"is_active": True,
                         "sort_on": "sortable_title",
                         "sort_order": "ascending"},
             showOn=True,
+            visible=False,
         ),
     ),
 
@@ -451,7 +438,7 @@ schema = BikaSchema.copy() + Schema((
         read_permission=View,
         write_permission=FieldEditDateSampled,
         widget=DateTimeWidget(
-            label=_("Date Sampled"),
+            label=_("Date/Time Sampled"),
             description=_("The date when the sample was taken"),
             size=20,
             show_time=True,
@@ -475,11 +462,8 @@ schema = BikaSchema.copy() + Schema((
             label=_("Sampler"),
             description=_("The person who took the sample"),
             # see SamplingWOrkflowWidgetVisibility
-            visible={
-                'add': 'edit',
-                'header_table': 'prominent',
-            },
             render_own_label=True,
+            visible=False,
         ),
     ),
 
@@ -494,10 +478,8 @@ schema = BikaSchema.copy() + Schema((
                           "the scheduled date"),
             format='select',
             label=_("Sampler for scheduled sampling"),
-            visible={
-                'add': 'edit',
-            },
             render_own_label=True,
+            visible=False,
         ),
     ),
 
@@ -513,10 +495,7 @@ schema = BikaSchema.copy() + Schema((
             show_time=True,
             datepicker_nopast=1,
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'secondary': 'disabled',
-            },
+            visible=False,
         ),
     ),
 
@@ -552,14 +531,12 @@ schema = BikaSchema.copy() + Schema((
         widget=ReferenceWidget(
             label=_("Container"),
             render_own_label=True,
-            visible={
-                'add': 'edit',
-            },
             catalog_name='bika_setup_catalog',
             base_query={"is_active": True,
                         "sort_on": "sortable_title",
                         "sort_order": "ascending"},
             showOn=True,
+            visible=False,
         ),
     ),
 
@@ -573,14 +550,12 @@ schema = BikaSchema.copy() + Schema((
         widget=ReferenceWidget(
             label=_("Preservation"),
             render_own_label=True,
-            visible={
-                'add': 'edit',
-            },
             catalog_name='bika_setup_catalog',
             base_query={"is_active": True,
                         "sort_on": "sortable_title",
                         "sort_order": "ascending"},
             showOn=True,
+            visible=False,
         ),
     ),
 
@@ -594,10 +569,7 @@ schema = BikaSchema.copy() + Schema((
             size=20,
             show_time=True,
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'header_table': 'prominent',
-            },
+            visible=False,
         ),
     ),
     StringField('Preserver',
@@ -610,10 +582,7 @@ schema = BikaSchema.copy() + Schema((
             format='select',
             label=_("Preserver"),
             description=_("The person who preserved the sample"),
-            visible={
-                'add': 'edit',
-                'header_table': 'prominent',
-            },
+            visible=False,
             render_own_label=True,
         ),
     ),
@@ -636,10 +605,7 @@ schema = BikaSchema.copy() + Schema((
             label=_("Sample Rejection"),
             description=_("Set the Sample Rejection workflow and the reasons"),
             render_own_label=False,
-            visible={
-                'add': 'edit',
-                'secondary': 'disabled',
-            },
+            visible=False,
         ),
     ),
 
@@ -653,8 +619,8 @@ schema = BikaSchema.copy() + Schema((
         read_permission=View,
         write_permission=FieldEditSpecification,
         widget=ReferenceWidget(
-            label=_("Analysis Specification"),
-            description=_("Choose default Sample specification values"),
+            label=_("Analysis Ranges"),
+            description=_("Sets the Optimal and Control Ranges"),
             size=20,
             render_own_label=True,
             visible={
@@ -709,15 +675,12 @@ schema = BikaSchema.copy() + Schema((
                 "Set the specification to be used before publishing a Sample."),
             size=20,
             render_own_label=True,
-            visible={
-                "add": "invisible",
-                'secondary': 'disabled',
-            },
             catalog_name='bika_setup_catalog',
             base_query={"is_active": True,
                         "sort_on": "sortable_title",
                         "sort_order": "ascending"},
             showOn=True,
+            visible=False,
         ),
     ),
 
@@ -756,15 +719,12 @@ schema = BikaSchema.copy() + Schema((
             description=_("Location where sample is kept"),
             size=20,
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'secondary': 'disabled',
-            },
             catalog_name='bika_setup_catalog',
             base_query={"is_active": True,
                         "sort_on": "sortable_title",
                         "sort_order": "ascending"},
             showOn=True,
+            visible=False,
         ),
     ),
 
@@ -778,10 +738,7 @@ schema = BikaSchema.copy() + Schema((
             description=_("The client side order number for this request"),
             size=20,
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'secondary': 'disabled',
-            },
+            visible=False,
         ),
     ),
 
@@ -794,10 +751,7 @@ schema = BikaSchema.copy() + Schema((
             label=_("Client Reference"),
             description=_("The client side reference for this request"),
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'secondary': 'disabled',
-            },
+            visible=False,
         ),
     ),
 
@@ -808,7 +762,7 @@ schema = BikaSchema.copy() + Schema((
         write_permission=FieldEditClientSampleID,
         widget=StringWidget(
             label=_("Client Sample ID"),
-            description=_("The client side identifier of the sample"),
+            description=_("The name the Client used to identify the Sample"),
             size=20,
             render_own_label=True,
             visible={
@@ -830,10 +784,7 @@ schema = BikaSchema.copy() + Schema((
                           "was sampled"),
             size=20,
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'secondary': 'disabled',
-            },
+            visible=False,
             catalog_name='bika_setup_catalog',
             base_query={"is_active": True,
                         "sort_on": "sortable_title",
@@ -853,15 +804,12 @@ schema = BikaSchema.copy() + Schema((
             description=_("The condition of the sample"),
             size=20,
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'secondary': 'disabled',
-            },
             catalog_name='bika_setup_catalog',
             base_query={"is_active": True,
                         "sort_on": "sortable_title",
                         "sort_order": "ascending"},
             showOn=True,
+            visible=False,
         ),
     ),
 
@@ -875,9 +823,7 @@ schema = BikaSchema.copy() + Schema((
         widget=PrioritySelectionWidget(
             label=_('Priority'),
             format='select',
-            visible={
-                'add': 'edit',
-            },
+            visible=False,
         ),
     ),
     StringField(
@@ -888,12 +834,9 @@ schema = BikaSchema.copy() + Schema((
         widget=StringWidget(
             label=_("Environmental conditions"),
             description=_("The environmental condition during sampling"),
-            visible={
-                'add': 'edit',
-                'header_table': 'prominent',
-            },
             render_own_label=True,
             size=20,
+            visible=False,
         ),
     ),
 
@@ -929,10 +872,7 @@ schema = BikaSchema.copy() + Schema((
         widget=BooleanWidget(
             label=_("Composite"),
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'secondary': 'disabled',
-            },
+            visible=False,
         ),
     ),
 
@@ -946,10 +886,7 @@ schema = BikaSchema.copy() + Schema((
             label=_("Invoice Exclude"),
             description=_("Should the analyses be excluded from the invoice?"),
             render_own_label=True,
-            visible={
-                'add': 'edit',
-                'header_table': 'visible',
-            },
+            visible=False,
         ),
     ),
 
@@ -984,10 +921,7 @@ schema = BikaSchema.copy() + Schema((
         # "ModifyPortalContent"
         write_permission=ModifyPortalContent,
         widget=ComputedWidget(
-            visible={
-                'edit': 'invisible',
-                'view': 'invisible',
-            },
+            visible=False,
         )
     ),
 
@@ -1001,11 +935,7 @@ schema = BikaSchema.copy() + Schema((
                           "sample in this sample, or to specify "
                           "your request."),
             render_own_label=True,
-            visible={
-                'view': 'invisible',
-                'add': 'edit',
-                'header_table': 'invisible',
-            },
+            visible=False,
         )
     ),
 
@@ -1019,10 +949,7 @@ schema = BikaSchema.copy() + Schema((
         read_permission=View,
         write_permission=ModifyPortalContent,
         widget=ComputedWidget(
-            visible={
-                'edit': 'invisible',
-                'view': 'visible',
-            },
+            visible=False,
         )
     ),
 
@@ -1037,6 +964,7 @@ schema = BikaSchema.copy() + Schema((
             datepicker_nofuture=1,
             description=_("The date when the sample was received"),
             render_own_label=True,
+            visible=False,
         ),
     ),
     ComputedField(
@@ -1079,10 +1007,68 @@ schema = BikaSchema.copy() + Schema((
             label=_("Member discount %"),
             description=_("Enter percentage value eg. 33.0"),
             render_own_label=True,
-            visible={
-                'add': 'invisible',
-            },
+            visible=False,
         ),
+    ),
+#custom fields
+    StringField(
+        'PlantType',
+        widget=StringWidget(
+            label="Plant Type",
+            description="The Plant Species or Crop the sample was taken from (Sap Samples)",
+            render_own_label=True,
+            visible={
+                'edit':'visible',
+                'view':'visible',
+                'add':'edit',
+                'header_table':'visible',
+            },
+        )
+    ),
+
+    StringField(
+        'Variety',
+        widget=StringWidget(
+            label="Variety",
+            description="The Plant Variety or Cultivar the sample was taken from (Sap Samples)",
+            render_own_label=True,
+            visible={
+                'edit':'visible',
+                'view':'visible',
+                'add':'edit',
+                'header_table':'visible',
+            },
+        )
+    ),
+
+    StringField(
+        'GrowthStage',
+        widget=StringWidget(
+            label="Growth Stage",
+            description="The development stage of the plant the sample was taken from (Sap Samples)",
+            render_own_label=True,
+            visible={
+                'edit':'visible',
+                'view':'visible',
+                'add':'edit',
+                'header_table':'visible',
+            },
+        )
+    ),
+
+    BooleanField(
+        'NewLeaf',
+        widget=BooleanWidget(
+            label="New Leaf",
+            description="The sample is from the new growth of a plant (Sap Samples)",
+            render_own_label=True,
+            visible={
+                'edit':'visible',
+                'view':'visible',
+                'add':'edit',
+                'header_table':'visible',
+            },
+        )
     ),
 
     ComputedField(
@@ -1369,6 +1355,7 @@ schema.moveField('Client', before='Contact')
 schema.moveField('ResultsInterpretation', pos='bottom')
 schema.moveField('ResultsInterpretationDepts', pos='bottom')
 schema.moveField("PrimaryAnalysisRequest", before="Client")
+schema.moveField('SubGroup', before='PlantType')
 
 
 class AnalysisRequest(BaseFolder, ClientAwareMixin):

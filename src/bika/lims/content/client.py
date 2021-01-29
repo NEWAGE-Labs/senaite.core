@@ -171,6 +171,12 @@ schema = Organisation.schema.copy() + Schema((
             label=_("TrueBlue Grower #"),
         ),
     ),
+    StringField(
+        "WSSN",
+        widget=StringWidget(
+            label=_("WSSN"),
+        ),
+    ),
     UIDReferenceField(
         "Growers",
         multiValued=1,

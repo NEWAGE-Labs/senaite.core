@@ -247,10 +247,10 @@ schema['title'].validators = ()
 schema['title'].widget.description = _("A name for the Client's project.")
 schema['title'].required = False
 schema['title'].widget.visible = True
-schema['title'].widget.description = _("If no Title value is entered,"
-                                       " the Batch ID will be used.")
+schema['title'].widget.label = "Project Title"
 schema['description'].required = False
 schema['description'].widget.visible = True
+schema['description'].widget.label = _("SDG Notes")
 schema['description'].widget.description = _("Additional Notes for the Lab")
 
 schema.moveField('BatchID', before='description')
