@@ -86,6 +86,12 @@ ResultCaptureDate = DateTimeField(
     'ResultCaptureDate'
 )
 
+AnalysisDateTime = StringField(
+    'AnalysisDateTime',
+    read_permission=View,
+    write_permission="Field: Edit Result",
+)
+
 # Returns the retracted analysis this analysis is a retest of
 RetestOf = UIDReferenceField(
     'RetestOf'
@@ -166,6 +172,7 @@ schema = schema.copy() + Schema((
     NumberOfRequiredVerifications,
     Result,
     ResultCaptureDate,
+    AnalysisDateTime,
     RetestOf,
     Uncertainty,
     Calculation,

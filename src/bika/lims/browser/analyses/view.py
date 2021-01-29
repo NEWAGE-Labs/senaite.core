@@ -115,6 +115,7 @@ class AnalysesView(ListingView):
             ("Service", {
                 "title": _("Analysis"),
                 "attr": "Title",
+                "URL": "getURL",
                 "index": "sortable_title",
                 "sortable": False}),
             ("Method", {
@@ -157,28 +158,38 @@ class AnalysesView(ListingView):
             ("Uncertainty", {
                 "title": _("+-"),
                 "ajax": True,
-                "sortable": False}),
+                "sortable": False,
+                "toggle": False}),
             ("retested", {
                 "title": _("Retested"),
                 "type": "boolean",
-                "sortable": False}),
+                "sortable": False,
+                "toggle": False}),
             ("Attachments", {
                 "title": _("Attachments"),
-                "sortable": False}),
+                "sortable": False,
+                "toggle": False}),
             ("CaptureDate", {
                 "title": _("Captured"),
                 "index": "getResultCaptureDate",
-                "sortable": False}),
+                "sortable": False,
+                "toggle": False}),
+            ("AnalysisDateTime", {
+                "title": _("Analysis Date/Time"),
+                "ajax": True,
+                "type": "string"}),
             ("SubmittedBy", {
                 "title": _("Submitter"),
-                "sortable": False}),
+                "sortable": False,
+                "toggle": False}),
             ("DueDate", {
                 "title": _("Due Date"),
                 "index": "getDueDate",
-                "sortable": False}),
+                "sortable": False,
+                "toggle": False}),
             ("Hidden", {
                 "title": _("Hidden"),
-                "toggle": True,
+                "toggle": False,
                 "sortable": False,
                 "ajax": True,
                 "type": "boolean"}),
@@ -605,6 +616,7 @@ class AnalysesView(ListingView):
         self._folder_item_fieldicons(obj)
         # Renders remarks toggle button
         self._folder_item_remarks(obj, item)
+        self._folder_item_analysisdatetime(obj, item)
 
         return item
 
@@ -698,6 +710,17 @@ class AnalysesView(ListingView):
         cat_order = self.analysis_categories_order.get(cat)
         if (cat, cat_order) not in self.categories:
             self.categories.append((cat, cat_order))
+
+#Custom Method
+    def _folder_item_analysisdatetime(self, analysis_brain, item):
+        """Sets the category to the item passed in
+
+        :param analysis_brain: Brain that represents an analysis
+        :param item: analysis' dictionary counterpart that represents a row
+        """
+        item["allow_edit"].append("AnalysisDateTime")
+        datetime = self.get_object(analysis_brain).getAnalysisDateTime()
+        item["AnalysisDateTime"] = datetime or ""
 
     def _folder_item_css_class(self, analysis_brain, item):
         """Sets the suitable css class name(s) to `table_row_class` from the
