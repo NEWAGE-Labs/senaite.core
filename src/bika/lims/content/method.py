@@ -77,7 +77,15 @@ schema = BikaSchema.copy() + Schema((
             description=_("Technical description and instructions "
                           "intended for analysts"),
             allow_file_upload=False,
+            visible=False,
         ),
+    ),
+
+    StringField(
+        "SOP",
+        widget=StringWidget(
+            label=_("Link to SOP"),
+        )
     ),
 
     BlobFileField(
@@ -113,6 +121,7 @@ schema = BikaSchema.copy() + Schema((
         widget=PicklistWidget(
             label=_("Calculations"),
             description=_("Supported calculations of this method"),
+            visible=False,
         )
     ),
 
